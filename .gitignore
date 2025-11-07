@@ -37,7 +37,18 @@ prisma/migrations/
 
 # Database
 *.db
+*.db-journal
 *.sqlite
-# Но НЕ игнорируем dev.db (локальная БД проекта)
-!prisma/dev.db
+*.sqlite3
+
+# Markdown files (except README)
+*.md
+!README.md
+!frontend/README.md
+
+# PowerShell scripts
+*.ps1
+
+# Backups
+backups/
 
