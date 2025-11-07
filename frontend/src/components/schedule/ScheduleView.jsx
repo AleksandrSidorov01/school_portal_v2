@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { scheduleService } from '../../services/schedule.service.js';
 import Card from '../ui/Card.jsx';
 import Badge from '../ui/Badge.jsx';
@@ -26,7 +26,7 @@ const ScheduleView = () => {
     try {
       setLoading(true);
       const data = await scheduleService.getMySchedule();
-      setSchedule(data);
+      setSchedule(data || []);
       setError('');
     } catch (err) {
       setError('Не удалось загрузить расписание');
@@ -37,12 +37,33 @@ const ScheduleView = () => {
   };
 
   // Группировка расписания по дням недели
-  const scheduleByDay = daysOfWeek.map(day => ({
-    ...day,
-    lessons: schedule
-      .filter(s => s.dayOfWeek === day.number)
-      .sort((a, b) => a.lessonNumber - b.lessonNumber),
-  }));
+  const scheduleByDay = useMemo(() => {
+    if (!schedule || schedule.length === 0) {
+      return daysOfWeek.map(day => ({ ...day, lessons: [] }));
+    }
+    
+    return daysOfWeek.map(day => ({
+      ...day,
+      lessons: schedule
+        .filter(s => s?.dayOfWeek === day.number)
+        .sort((a, b) => (a?.lessonNumber || 0) - (b?.lessonNumber || 0)),
+    }));
+  }, [schedule]);
+
+  // Время уроков
+  const getLessonTime = (lessonNumber) => {
+    const times = {
+      1: '08:00 - 08:45',
+      2: '08:55 - 09:40',
+      3: '09:50 - 10:35',
+      4: '10:45 - 11:30',
+      5: '11:40 - 12:25',
+      6: '12:35 - 13:20',
+      7: '13:30 - 14:15',
+      8: '14:25 - 15:10',
+    };
+    return times[lessonNumber] || 'Время не указано';
+  };
 
   if (loading) {
     return (
@@ -103,12 +124,14 @@ const ScheduleView = () => {
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-semibold">
-                          {lesson.lessonNumber}
+                          {lesson.lessonNumber || '-'}
                         </div>
                         <div>
-                          <div className="font-medium">{lesson.subject?.name || 'Не указан'}</div>
+                          <div className="font-medium">
+                            {lesson?.subject?.name || 'Не указан'}
+                          </div>
                           <div className="text-sm text-muted-foreground">
-                            {lesson.teacher?.user 
+                            {lesson?.teacher?.user 
                               ? `${lesson.teacher.user.firstName} ${lesson.teacher.user.lastName}`
                               : 'Учитель не указан'
                             }
@@ -116,13 +139,13 @@ const ScheduleView = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        {lesson.room && (
+                        {lesson?.room && (
                           <Badge variant="outline" className="mb-1">
                             Каб. {lesson.room}
                           </Badge>
                         )}
                         <div className="text-sm text-muted-foreground">
-                          {getLessonTime(lesson.lessonNumber)}
+                          {getLessonTime(lesson?.lessonNumber)}
                         </div>
                       </div>
                     </div>
@@ -137,20 +160,4 @@ const ScheduleView = () => {
   );
 };
 
-// Время уроков (можно настроить под ваше расписание)
-const getLessonTime = (lessonNumber) => {
-  const times = {
-    1: '08:00 - 08:45',
-    2: '08:55 - 09:40',
-    3: '09:50 - 10:35',
-    4: '10:45 - 11:30',
-    5: '11:40 - 12:25',
-    6: '12:35 - 13:20',
-    7: '13:30 - 14:15',
-    8: '14:25 - 15:10',
-  };
-  return times[lessonNumber] || 'Время не указано';
-};
-
 export default ScheduleView;
-

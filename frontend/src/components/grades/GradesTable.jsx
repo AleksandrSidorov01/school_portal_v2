@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { gradeService } from '../../services/grade.service.js';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
@@ -18,7 +18,7 @@ const GradesTable = () => {
     try {
       setLoading(true);
       const data = await gradeService.getMyGrades();
-      setGrades(data);
+      setGrades(data || []);
       setError('');
     } catch (err) {
       setError('Не удалось загрузить оценки');
@@ -29,33 +29,48 @@ const GradesTable = () => {
   };
 
   // Получить уникальные предметы
-  const subjects = [...new Set(grades.map(g => g.subject?.name).filter(Boolean)))];
+  const subjects = useMemo(() => {
+    if (!grades || grades.length === 0) return [];
+    const subjectNames = grades
+      .map(g => g?.subject?.name)
+      .filter(Boolean);
+    return [...new Set(subjectNames)];
+  }, [grades]);
 
   // Фильтрация по предмету
-  const filteredGrades = selectedSubject === 'all' 
-    ? grades 
-    : grades.filter(g => g.subject?.name === selectedSubject);
+  const filteredGrades = useMemo(() => {
+    if (!grades || grades.length === 0) return [];
+    if (selectedSubject === 'all') return grades;
+    return grades.filter(g => g?.subject?.name === selectedSubject);
+  }, [grades, selectedSubject]);
 
   // Группировка по предметам для статистики
-  const subjectStats = subjects.reduce((acc, subjectName) => {
-    const subjectGrades = grades.filter(g => g.subject?.name === subjectName);
-    const values = subjectGrades.map(g => g.value);
-    const average = values.length > 0 
-      ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)
-      : 0;
+  const subjectStats = useMemo(() => {
+    if (!grades || grades.length === 0 || subjects.length === 0) return {};
     
-    acc[subjectName] = {
-      average: parseFloat(average),
-      count: values.length,
-      grades: subjectGrades,
-    };
-    return acc;
-  }, {});
+    return subjects.reduce((acc, subjectName) => {
+      const subjectGrades = grades.filter(g => g?.subject?.name === subjectName);
+      const values = subjectGrades.map(g => g?.value).filter(v => v != null && !isNaN(v));
+      const average = values.length > 0 
+        ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)
+        : '0.00';
+      
+      acc[subjectName] = {
+        average: parseFloat(average),
+        count: values.length,
+        grades: subjectGrades,
+      };
+      return acc;
+    }, {});
+  }, [grades, subjects]);
 
   // Общий средний балл
-  const overallAverage = grades.length > 0
-    ? (grades.reduce((sum, g) => sum + g.value, 0) / grades.length).toFixed(2)
-    : 0;
+  const overallAverage = useMemo(() => {
+    if (!grades || grades.length === 0) return '0.00';
+    const values = grades.map(g => g?.value).filter(v => v != null && !isNaN(v));
+    if (values.length === 0) return '0.00';
+    return (values.reduce((sum, val) => sum + val, 0) / values.length).toFixed(2);
+  }, [grades]);
 
   const getGradeColor = (value) => {
     if (value >= 4.5) return 'success';
@@ -65,12 +80,17 @@ const GradesTable = () => {
   };
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ru-RU', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+    } catch {
+      return '-';
+    }
   };
 
   if (loading) {
@@ -121,7 +141,7 @@ const GradesTable = () => {
           <Card.Header>
             <Card.Description>Отличных оценок (5)</Card.Description>
             <Card.Title className="text-3xl">
-              {grades.filter(g => g.value === 5).length}
+              {grades.filter(g => g?.value === 5).length}
             </Card.Title>
           </Card.Header>
         </Card>
@@ -192,21 +212,21 @@ const GradesTable = () => {
                   <Table.Row key={grade.id}>
                     <Table.Cell>{formatDate(grade.date)}</Table.Cell>
                     <Table.Cell className="font-medium">
-                      {grade.subject?.name || 'Не указан'}
+                      {grade?.subject?.name || 'Не указан'}
                     </Table.Cell>
                     <Table.Cell>
-                      <Badge variant={getGradeColor(grade.value)}>
-                        {grade.value}
+                      <Badge variant={getGradeColor(grade?.value || 0)}>
+                        {grade?.value || '-'}
                       </Badge>
                     </Table.Cell>
                     <Table.Cell>
-                      {grade.teacher?.user 
+                      {grade?.teacher?.user 
                         ? `${grade.teacher.user.firstName} ${grade.teacher.user.lastName}`
                         : 'Не указан'
                       }
                     </Table.Cell>
                     <Table.Cell className="text-muted-foreground">
-                      {grade.comment || '-'}
+                      {grade?.comment || '-'}
                     </Table.Cell>
                   </Table.Row>
                 ))}
@@ -234,11 +254,9 @@ const GradesTable = () => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold">
-                      <Badge variant={getGradeColor(stats.average)}>
-                        {stats.average}
-                      </Badge>
-                    </div>
+                    <Badge variant={getGradeColor(stats.average)}>
+                      {stats.average}
+                    </Badge>
                   </div>
                 </div>
               ))}
@@ -251,4 +269,3 @@ const GradesTable = () => {
 };
 
 export default GradesTable;
-
