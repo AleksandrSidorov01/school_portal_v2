@@ -25,14 +25,6 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
       ...prev,
       [name]: value,
     }));
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
     // Очищаем ошибку для этого поля при изменении
     if (errors[name]) {
       setErrors(prev => ({
