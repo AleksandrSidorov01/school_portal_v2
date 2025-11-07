@@ -105,10 +105,26 @@ export const getMe = async (req, res, next) => {
         createdAt: true,
         student: {
           include: {
-            class: true,
+            class: {
+              select: {
+                id: true,
+                name: true,
+                grade: true,
+                description: true,
+              },
+            },
           },
         },
-        teacher: true,
+        teacher: {
+          include: {
+            subjects: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
 
