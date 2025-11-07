@@ -1,0 +1,153 @@
+// Prisma схема для школьного портала
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+// Пользователь системы
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(STUDENT)
+  firstName String
+  lastName  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связи
+  student   Student?
+  teacher   Teacher?
+
+  @@map("users")
+}
+
+// Класс
+model Class {
+  id          String   @id @default(uuid())
+  name        String   // Например: "10А", "11Б"
+  grade       Int      // Класс (10, 11)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связи
+  students   Student[]
+  schedules  Schedule[]
+  classTeacher Teacher? @relation("ClassTeacher")
+
+  @@unique([name, grade])
+  @@map("classes")
+}
+
+// Ученик
+model Student {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  classId   String
+  studentNumber String? // Номер в журнале
+  birthDate DateTime?
+  address   String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связи
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class     Class    @relation(fields: [classId], references: [id])
+  grades    Grade[]
+  schedules Schedule[] @relation("StudentSchedule")
+
+  @@map("students")
+}
+
+// Учитель
+model Teacher {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  employeeNumber String?
+  specialization String?   // Специализация (математика, физика и т.д.)
+  phone       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связи
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjects    Subject[]
+  schedules   Schedule[]
+  grades      Grade[]
+  classTeacher Class?  @relation("ClassTeacher")
+
+  @@map("teachers")
+}
+
+// Предмет
+model Subject {
+  id          String   @id @default(uuid())
+  name        String   // Математика, Физика и т.д.
+  description String?
+  teacherId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связи
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  grades      Grade[]
+  schedules   Schedule[]
+
+  @@map("subjects")
+}
+
+// Оценка
+model Grade {
+  id          String   @id @default(uuid())
+  studentId   String
+  subjectId   String
+  teacherId   String
+  value       Int      // Оценка (2-5)
+  date        DateTime @default(now())
+  comment     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связи
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+
+  @@map("grades")
+}
+
+// Расписание
+model Schedule {
+  id          String   @id @default(uuid())
+  classId     String
+  subjectId  String
+  teacherId   String
+  dayOfWeek   Int      // 1-7 (понедельник-воскресенье)
+  lessonNumber Int     // Номер урока (1, 2, 3...)
+  room        String?  // Кабинет
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связи
+  class       Class    @relation(fields: [classId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  students    Student[] @relation("StudentSchedule")
+
+  @@unique([classId, dayOfWeek, lessonNumber])
+  @@map("schedules")
+}
+
