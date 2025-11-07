@@ -82,6 +82,16 @@ export const createUser = async (req, res, next) => {
   try {
     const { email, password, firstName, lastName, role } = req.body;
 
+    // Проверка соединения с БД перед операцией
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+    } catch (dbError) {
+      return res.status(503).json({ 
+        message: 'База данных недоступна. Попробуйте перезапустить сервер.',
+        error: 'Database connection timeout'
+      });
+    }
+
     // Проверка существования пользователя
     const existingUser = await prisma.user.findUnique({
       where: { email },
