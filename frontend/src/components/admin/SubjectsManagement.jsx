@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { adminService } from '../../services/admin.service.js';
-import { teacherService } from '../../services/teacher.service.js';
-import api from '../../config/api.js';
+import { useToast } from '../../context/ToastContext.jsx';
 import Card from '../ui/Card.jsx';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
+import SearchBar from '../ui/SearchBar.jsx';
 import CreateSubjectModal from './CreateSubjectModal.jsx';
 
 const SubjectsManagement = () => {
@@ -12,6 +12,8 @@ const SubjectsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadSubjects();
@@ -38,12 +40,33 @@ const SubjectsManagement = () => {
 
     try {
       await adminService.deleteSubject(subjectId);
+      showToast('Предмет успешно удален', 'success');
       await loadSubjects();
     } catch (err) {
-      alert('Ошибка при удалении предмета');
+      showToast('Ошибка при удалении предмета', 'error');
       console.error(err);
     }
   };
+
+  // Фильтрация и поиск
+  const filteredSubjects = useMemo(() => {
+    let filtered = subjects;
+
+    // Поиск
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(subject =>
+        subject.name.toLowerCase().includes(query) ||
+        (subject.description && subject.description.toLowerCase().includes(query)) ||
+        (subject.teacher && (
+          subject.teacher.user.firstName.toLowerCase().includes(query) ||
+          subject.teacher.user.lastName.toLowerCase().includes(query)
+        ))
+      );
+    }
+
+    return filtered;
+  }, [subjects, searchQuery]);
 
   if (loading) {
     return (
@@ -65,7 +88,7 @@ const SubjectsManagement = () => {
             <div>
               <Card.Title>Управление предметами</Card.Title>
               <Card.Description>
-                Всего предметов: {subjects.length}
+                Всего предметов: {subjects.length} {filteredSubjects.length !== subjects.length && `(найдено: ${filteredSubjects.length})`}
               </Card.Description>
             </div>
             <button
@@ -77,12 +100,21 @@ const SubjectsManagement = () => {
           </div>
         </Card.Header>
         <Card.Content>
+          {/* Поиск */}
+          <div className="mb-6">
+            <SearchBar
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Поиск по названию, описанию, учителю..."
+            />
+          </div>
+
           {error && (
             <div className="text-destructive mb-4">{error}</div>
           )}
-          {subjects.length === 0 ? (
+          {filteredSubjects.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Предметов пока нет
+              {searchQuery ? 'Предметы не найдены' : 'Предметов пока нет'}
             </div>
           ) : (
             <Table>
@@ -95,7 +127,7 @@ const SubjectsManagement = () => {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {subjects.map((subject) => (
+                {filteredSubjects.map((subject) => (
                   <Table.Row key={subject.id}>
                     <Table.Cell className="font-medium">{subject.name}</Table.Cell>
                     <Table.Cell className="text-muted-foreground">
@@ -138,4 +170,3 @@ const SubjectsManagement = () => {
 };
 
 export default SubjectsManagement;
-

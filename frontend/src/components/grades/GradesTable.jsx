@@ -1,14 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import { gradeService } from '../../services/grade.service.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
 import Card from '../ui/Card.jsx';
+import EditGradeModal from './EditGradeModal.jsx';
 
 const GradesTable = () => {
   const [grades, setGrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('all');
+  const [editingGrade, setEditingGrade] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadGrades();
@@ -205,6 +209,9 @@ const GradesTable = () => {
                   <Table.Head>Оценка</Table.Head>
                   <Table.Head>Учитель</Table.Head>
                   <Table.Head>Комментарий</Table.Head>
+                  {(user?.role === 'TEACHER' || user?.role === 'ADMIN') && (
+                    <Table.Head>Действия</Table.Head>
+                  )}
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -228,6 +235,16 @@ const GradesTable = () => {
                     <Table.Cell className="text-muted-foreground">
                       {grade?.comment || '-'}
                     </Table.Cell>
+                    {(user?.role === 'TEACHER' || user?.role === 'ADMIN') && (
+                      <Table.Cell>
+                        <button
+                          onClick={() => setEditingGrade(grade)}
+                          className="text-primary hover:text-primary/80 text-sm"
+                        >
+                          Редактировать
+                        </button>
+                      </Table.Cell>
+                    )}
                   </Table.Row>
                 ))}
               </Table.Body>
@@ -263,6 +280,17 @@ const GradesTable = () => {
             </div>
           </Card.Content>
         </Card>
+      )}
+
+      {editingGrade && (
+        <EditGradeModal
+          grade={editingGrade}
+          onClose={() => setEditingGrade(null)}
+          onSuccess={() => {
+            setEditingGrade(null);
+            loadGrades();
+          }}
+        />
       )}
     </div>
   );

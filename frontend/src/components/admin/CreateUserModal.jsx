@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { adminService } from '../../services/admin.service.js';
+import { useToast } from '../../context/ToastContext.jsx';
 import Card from '../ui/Card.jsx';
 
 const CreateUserModal = ({ onClose, onSuccess }) => {
@@ -12,6 +13,7 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { showToast } = useToast();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,11 +30,14 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
 
     try {
       await adminService.createUser(formData);
+      showToast('Пользователь успешно создан', 'success');
       if (onSuccess) {
         onSuccess();
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка при создании пользователя');
+      const errorMessage = err.response?.data?.message || 'Ошибка при создании пользователя';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }

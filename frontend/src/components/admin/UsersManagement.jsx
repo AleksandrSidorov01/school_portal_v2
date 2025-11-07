@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { adminService } from '../../services/admin.service.js';
+import { useToast } from '../../context/ToastContext.jsx';
 import Card from '../ui/Card.jsx';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
+import SearchBar from '../ui/SearchBar.jsx';
+import Select from '../ui/Select.jsx';
 import CreateUserModal from './CreateUserModal.jsx';
 import EditUserModal from './EditUserModal.jsx';
 import CreateProfileModal from './CreateProfileModal.jsx';
@@ -14,6 +17,9 @@ const UsersManagement = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [creatingProfile, setCreatingProfile] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadUsers();
@@ -40,12 +46,36 @@ const UsersManagement = () => {
 
     try {
       await adminService.deleteUser(userId);
+      showToast('Пользователь успешно удален', 'success');
       await loadUsers();
     } catch (err) {
-      alert('Ошибка при удалении пользователя');
+      showToast('Ошибка при удалении пользователя', 'error');
       console.error(err);
     }
   };
+
+  // Фильтрация и поиск
+  const filteredUsers = useMemo(() => {
+    let filtered = users;
+
+    // Фильтр по роли
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter(user => user.role === roleFilter);
+    }
+
+    // Поиск
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(user =>
+        user.firstName.toLowerCase().includes(query) ||
+        user.lastName.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query) ||
+        user.role.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [users, searchQuery, roleFilter]);
 
   const getRoleBadgeVariant = (role) => {
     switch (role) {
@@ -94,7 +124,7 @@ const UsersManagement = () => {
             <div>
               <Card.Title>Управление пользователями</Card.Title>
               <Card.Description>
-                Всего пользователей: {users.length}
+                Всего пользователей: {users.length} {filteredUsers.length !== users.length && `(найдено: ${filteredUsers.length})`}
               </Card.Description>
             </div>
             <button
@@ -106,12 +136,30 @@ const UsersManagement = () => {
           </div>
         </Card.Header>
         <Card.Content>
+          {/* Поиск и фильтры */}
+          <div className="grid gap-4 md:grid-cols-2 mb-6">
+            <SearchBar
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Поиск по имени, email, роли..."
+            />
+            <Select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+            >
+              <option value="all">Все роли</option>
+              <option value="ADMIN">Администратор</option>
+              <option value="TEACHER">Учитель</option>
+              <option value="STUDENT">Ученик</option>
+            </Select>
+          </div>
+
           {error && (
             <div className="text-destructive mb-4">{error}</div>
           )}
-          {users.length === 0 ? (
+          {filteredUsers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Пользователей пока нет
+              {searchQuery || roleFilter !== 'all' ? 'Пользователи не найдены' : 'Пользователей пока нет'}
             </div>
           ) : (
             <Table>
@@ -126,7 +174,7 @@ const UsersManagement = () => {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {users.map((user) => (
+                {filteredUsers.map((user) => (
                   <Table.Row key={user.id}>
                     <Table.Cell className="font-medium">
                       {user.firstName} {user.lastName}
@@ -220,4 +268,3 @@ const UsersManagement = () => {
 };
 
 export default UsersManagement;
-

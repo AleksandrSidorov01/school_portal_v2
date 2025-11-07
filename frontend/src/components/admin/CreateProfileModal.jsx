@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { classService } from '../../services/class.service.js';
+import { useToast } from '../../context/ToastContext.jsx';
 import api from '../../config/api.js';
 import Card from '../ui/Card.jsx';
 
@@ -17,6 +18,7 @@ const CreateProfileModal = ({ user, onClose, onSuccess }) => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -66,11 +68,14 @@ const CreateProfileModal = ({ user, onClose, onSuccess }) => {
           phone: formData.phone || undefined,
         });
       }
+      showToast(`Профиль ${user.role === 'STUDENT' ? 'ученика' : 'учителя'} успешно создан`, 'success');
       if (onSuccess) {
         onSuccess();
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка при создании профиля');
+      const errorMessage = err.response?.data?.message || 'Ошибка при создании профиля';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }

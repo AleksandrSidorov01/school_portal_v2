@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { gradeService } from '../../services/grade.service.js';
 import { classService } from '../../services/class.service.js';
 import { teacherService } from '../../services/teacher.service.js';
+import { useToast } from '../../context/ToastContext.jsx';
 import api from '../../config/api.js';
 import Card from '../ui/Card.jsx';
 
@@ -20,6 +21,7 @@ const CreateGradeForm = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadInitialData();
@@ -91,8 +93,9 @@ const CreateGradeForm = ({ onSuccess }) => {
 
     try {
       await gradeService.createGrade(formData);
-      setSuccess('Оценка успешно выставлена!');
+      showToast('Оценка успешно выставлена!', 'success');
       setFormData({
+        classId: '',
         studentId: '',
         subjectId: '',
         value: '',
@@ -103,7 +106,9 @@ const CreateGradeForm = ({ onSuccess }) => {
         onSuccess();
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка при выставлении оценки');
+      const errorMessage = err.response?.data?.message || 'Ошибка при выставлении оценки';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }

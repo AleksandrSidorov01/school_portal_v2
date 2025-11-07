@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { teacherService } from '../../services/teacher.service.js';
 import { adminService } from '../../services/admin.service.js';
+import { useToast } from '../../context/ToastContext.jsx';
 import Card from '../ui/Card.jsx';
 
 const CreateSubjectModal = ({ onClose, onSuccess }) => {
@@ -12,6 +13,7 @@ const CreateSubjectModal = ({ onClose, onSuccess }) => {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadTeachers();
@@ -41,11 +43,14 @@ const CreateSubjectModal = ({ onClose, onSuccess }) => {
 
     try {
       await adminService.createSubject(formData);
+      showToast('Предмет успешно создан', 'success');
       if (onSuccess) {
         onSuccess();
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка при создании предмета');
+      const errorMessage = err.response?.data?.message || 'Ошибка при создании предмета';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }

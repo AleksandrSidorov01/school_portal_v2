@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { adminService } from '../../services/admin.service.js';
+import { useToast } from '../../context/ToastContext.jsx';
 import Card from '../ui/Card.jsx';
 
 const EditUserModal = ({ user, onClose, onSuccess }) => {
@@ -11,6 +12,7 @@ const EditUserModal = ({ user, onClose, onSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -38,11 +40,14 @@ const EditUserModal = ({ user, onClose, onSuccess }) => {
 
     try {
       await adminService.updateUser(user.id, formData);
+      showToast('Пользователь успешно обновлен', 'success');
       if (onSuccess) {
         onSuccess();
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка при обновлении пользователя');
+      const errorMessage = err.response?.data?.message || 'Ошибка при обновлении пользователя';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }

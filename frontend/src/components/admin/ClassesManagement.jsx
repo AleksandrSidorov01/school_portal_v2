@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { classService } from '../../services/class.service.js';
 import api from '../../config/api.js';
+import { useToast } from '../../context/ToastContext.jsx';
 import Card from '../ui/Card.jsx';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
+import SearchBar from '../ui/SearchBar.jsx';
 import CreateClassModal from './CreateClassModal.jsx';
 import EditClassModal from './EditClassModal.jsx';
 
@@ -13,6 +15,9 @@ const ClassesManagement = () => {
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingClass, setEditingClass] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [gradeFilter, setGradeFilter] = useState('all');
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadData();
@@ -39,12 +44,37 @@ const ClassesManagement = () => {
 
     try {
       await api.delete(`/classes/${classId}`);
+      showToast('Класс успешно удален', 'success');
       await loadData();
     } catch (err) {
-      alert('Ошибка при удалении класса');
+      showToast('Ошибка при удалении класса', 'error');
       console.error(err);
     }
   };
+
+  // Фильтрация и поиск
+  const filteredClasses = useMemo(() => {
+    let filtered = classes;
+
+    // Фильтр по классу
+    if (gradeFilter !== 'all') {
+      filtered = filtered.filter(cls => cls.grade === parseInt(gradeFilter));
+    }
+
+    // Поиск
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(cls =>
+        cls.name.toLowerCase().includes(query) ||
+        (cls.classTeacher && (
+          cls.classTeacher.user.firstName.toLowerCase().includes(query) ||
+          cls.classTeacher.user.lastName.toLowerCase().includes(query)
+        ))
+      );
+    }
+
+    return filtered;
+  }, [classes, searchQuery, gradeFilter]);
 
   if (loading) {
     return (
@@ -58,6 +88,9 @@ const ClassesManagement = () => {
     );
   }
 
+  // Получить уникальные номера классов для фильтра
+  const uniqueGrades = [...new Set(classes.map(cls => cls.grade))].sort((a, b) => a - b);
+
   return (
     <div className="space-y-6">
       <Card>
@@ -66,7 +99,7 @@ const ClassesManagement = () => {
             <div>
               <Card.Title>Управление классами</Card.Title>
               <Card.Description>
-                Всего классов: {classes.length}
+                Всего классов: {classes.length} {filteredClasses.length !== classes.length && `(найдено: ${filteredClasses.length})`}
               </Card.Description>
             </div>
             <button
@@ -78,12 +111,30 @@ const ClassesManagement = () => {
           </div>
         </Card.Header>
         <Card.Content>
+          {/* Поиск и фильтры */}
+          <div className="grid gap-4 md:grid-cols-2 mb-6">
+            <SearchBar
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Поиск по названию, классному руководителю..."
+            />
+            <Select
+              value={gradeFilter}
+              onChange={(e) => setGradeFilter(e.target.value)}
+            >
+              <option value="all">Все классы</option>
+              {uniqueGrades.map(grade => (
+                <option key={grade} value={grade}>{grade} класс</option>
+              ))}
+            </Select>
+          </div>
+
           {error && (
             <div className="text-destructive mb-4">{error}</div>
           )}
-          {classes.length === 0 ? (
+          {filteredClasses.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Классов пока нет
+              {searchQuery || gradeFilter !== 'all' ? 'Классы не найдены' : 'Классов пока нет'}
             </div>
           ) : (
             <Table>
@@ -97,7 +148,7 @@ const ClassesManagement = () => {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {classes.map((cls) => (
+                {filteredClasses.map((cls) => (
                   <Table.Row key={cls.id}>
                     <Table.Cell className="font-medium">{cls.name}</Table.Cell>
                     <Table.Cell>
@@ -162,4 +213,3 @@ const ClassesManagement = () => {
 };
 
 export default ClassesManagement;
-

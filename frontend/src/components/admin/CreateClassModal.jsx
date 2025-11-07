@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { teacherService } from '../../services/teacher.service.js';
+import { useToast } from '../../context/ToastContext.jsx';
 import api from '../../config/api.js';
 import Card from '../ui/Card.jsx';
 
@@ -13,6 +14,7 @@ const CreateClassModal = ({ onClose, onSuccess }) => {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadTeachers();
@@ -48,11 +50,14 @@ const CreateClassModal = ({ onClose, onSuccess }) => {
         classTeacherId: formData.classTeacherId || undefined,
       };
       await api.post('/classes', data);
+      showToast('Класс успешно создан', 'success');
       if (onSuccess) {
         onSuccess();
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка при создании класса');
+      const errorMessage = err.response?.data?.message || 'Ошибка при создании класса';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }

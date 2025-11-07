@@ -1,41 +1,20 @@
-import { useState, useEffect } from 'react';
-import { teacherService } from '../../services/teacher.service.js';
+import { useState } from 'react';
 import { useToast } from '../../context/ToastContext.jsx';
 import api from '../../config/api.js';
 import Card from '../ui/Card.jsx';
 
-const EditClassModal = ({ classItem, onClose, onSuccess }) => {
+const CreateScheduleModal = ({ classes, subjects, teachers, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    grade: '',
-    description: '',
-    classTeacherId: '',
+    classId: '',
+    subjectId: '',
+    teacherId: '',
+    dayOfWeek: '1',
+    lessonNumber: '1',
+    room: '',
   });
-  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { showToast } = useToast();
-
-  useEffect(() => {
-    if (classItem) {
-      setFormData({
-        name: classItem.name || '',
-        grade: classItem.grade || '',
-        description: classItem.description || '',
-        classTeacherId: classItem.classTeacherId || '',
-      });
-    }
-    loadTeachers();
-  }, [classItem]);
-
-  const loadTeachers = async () => {
-    try {
-      const response = await teacherService.getAllTeachers();
-      setTeachers(response || []);
-    } catch (err) {
-      console.error('Ошибка загрузки учителей:', err);
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,19 +30,18 @@ const EditClassModal = ({ classItem, onClose, onSuccess }) => {
     setLoading(true);
 
     try {
-      const data = {
-        name: formData.name,
-        grade: parseInt(formData.grade),
-        description: formData.description || undefined,
-        classTeacherId: formData.classTeacherId || null,
-      };
-      await api.put(`/classes/${classItem.id}`, data);
-      showToast('Класс успешно обновлен', 'success');
+      await api.post('/schedule', {
+        ...formData,
+        dayOfWeek: parseInt(formData.dayOfWeek),
+        lessonNumber: parseInt(formData.lessonNumber),
+        room: formData.room || undefined,
+      });
+      showToast('Запись расписания успешно создана', 'success');
       if (onSuccess) {
         onSuccess();
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Ошибка при обновлении класса';
+      const errorMessage = err.response?.data?.message || 'Ошибка при создании записи расписания';
       setError(errorMessage);
       showToast(errorMessage, 'error');
     } finally {
@@ -71,15 +49,23 @@ const EditClassModal = ({ classItem, onClose, onSuccess }) => {
     }
   };
 
-  if (!classItem) return null;
+  const daysOfWeek = [
+    { value: 1, label: 'Понедельник' },
+    { value: 2, label: 'Вторник' },
+    { value: 3, label: 'Среда' },
+    { value: 4, label: 'Четверг' },
+    { value: 5, label: 'Пятница' },
+    { value: 6, label: 'Суббота' },
+    { value: 7, label: 'Воскресенье' },
+  ];
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <Card className="w-full max-w-2xl m-4 max-h-[90vh] overflow-y-auto">
         <Card.Header>
-          <Card.Title>Редактировать класс</Card.Title>
+          <Card.Title>Создать запись расписания</Card.Title>
           <Card.Description>
-            Измените данные класса или назначьте классного руководителя
+            Добавьте новую запись в расписание
           </Card.Description>
         </Card.Header>
         <Card.Content>
@@ -93,63 +79,112 @@ const EditClassModal = ({ classItem, onClose, onSuccess }) => {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Название класса *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Класс (номер) *
-                </label>
-                <input
-                  type="number"
-                  name="grade"
-                  value={formData.grade}
-                  onChange={handleChange}
-                  required
-                  min="1"
-                  max="11"
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">
-                  Классный руководитель
+                  Класс *
                 </label>
                 <select
-                  name="classTeacherId"
-                  value={formData.classTeacherId}
+                  name="classId"
+                  value={formData.classId}
                   onChange={handleChange}
+                  required
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <option value="">Не назначен</option>
-                  {teachers.map((teacher) => (
-                    <option key={teacher.id} value={teacher.id}>
-                      {teacher.user.firstName} {teacher.user.lastName}
-                      {teacher.specialization && ` (${teacher.specialization})`}
+                  <option value="">Выберите класс</option>
+                  {classes.map((cls) => (
+                    <option key={cls.id} value={cls.id}>
+                      {cls.name} ({cls.grade} класс)
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium mb-2">
-                  Описание
+                  Предмет *
                 </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
+                <select
+                  name="subjectId"
+                  value={formData.subjectId}
                   onChange={handleChange}
-                  rows={3}
+                  required
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">Выберите предмет</option>
+                  {subjects.map((subject) => (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Учитель *
+                </label>
+                <select
+                  name="teacherId"
+                  value={formData.teacherId}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  <option value="">Выберите учителя</option>
+                  {teachers.map((teacher) => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.user.firstName} {teacher.user.lastName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  День недели *
+                </label>
+                <select
+                  name="dayOfWeek"
+                  value={formData.dayOfWeek}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {daysOfWeek.map((day) => (
+                    <option key={day.value} value={day.value}>
+                      {day.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Номер урока *
+                </label>
+                <select
+                  name="lessonNumber"
+                  value={formData.lessonNumber}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                    <option key={num} value={num}>
+                      {num}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Кабинет
+                </label>
+                <input
+                  type="text"
+                  name="room"
+                  value={formData.room}
+                  onChange={handleChange}
+                  placeholder="Например: 101"
                   className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
@@ -168,7 +203,7 @@ const EditClassModal = ({ classItem, onClose, onSuccess }) => {
                 disabled={loading}
                 className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
               >
-                {loading ? 'Сохранение...' : 'Сохранить'}
+                {loading ? 'Создание...' : 'Создать'}
               </button>
             </div>
           </form>
@@ -178,5 +213,5 @@ const EditClassModal = ({ classItem, onClose, onSuccess }) => {
   );
 };
 
-export default EditClassModal;
+export default CreateScheduleModal;
 

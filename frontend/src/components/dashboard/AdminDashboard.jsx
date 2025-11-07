@@ -4,6 +4,7 @@ import StatisticsCards from '../admin/StatisticsCards.jsx';
 import UsersManagement from '../admin/UsersManagement.jsx';
 import ClassesManagement from '../admin/ClassesManagement.jsx';
 import SubjectsManagement from '../admin/SubjectsManagement.jsx';
+import ScheduleManagement from '../schedule/ScheduleManagement.jsx';
 import Card from '../ui/Card.jsx';
 
 const AdminDashboard = () => {
@@ -15,6 +16,7 @@ const AdminDashboard = () => {
     { id: 'users', name: 'Пользователи', icon: '👥' },
     { id: 'classes', name: 'Классы', icon: '🏫' },
     { id: 'subjects', name: 'Предметы', icon: '📚' },
+    { id: 'schedule', name: 'Расписание', icon: '📅' },
   ];
 
   return (
@@ -85,6 +87,7 @@ const AdminDashboard = () => {
           {activeTab === 'users' && <UsersManagement />}
           {activeTab === 'classes' && <ClassesManagement />}
           {activeTab === 'subjects' && <SubjectsManagement />}
+          {activeTab === 'schedule' && <ScheduleManagement />}
         </div>
       </main>
     </div>
