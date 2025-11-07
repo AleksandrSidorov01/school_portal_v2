@@ -29,6 +29,8 @@ Thumbs.db
 # Build
 dist/
 build/
+frontend/dist/
+frontend/build/
 
 # Prisma
 prisma/migrations/
