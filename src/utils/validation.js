@@ -7,7 +7,7 @@ export const validateRegister = (data) => {
     password: Joi.string().min(6).required(),
     firstName: Joi.string().required(),
     lastName: Joi.string().required(),
-    role: Joi.string().valid('STUDENT', 'TEACHER', 'ADMIN').optional(),
+    // Роль всегда STUDENT при регистрации, админов создаем через скрипт
   });
 
   return schema.validate(data);

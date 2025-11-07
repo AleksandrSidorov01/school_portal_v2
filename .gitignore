@@ -38,4 +38,6 @@ prisma/migrations/
 # Database
 *.db
 *.sqlite
+# Но НЕ игнорируем dev.db (локальная БД проекта)
+!prisma/dev.db
 
