@@ -21,16 +21,16 @@ npm install
 CREATE DATABASE school_portal;
 ```
 
-2. Создайте файл `.env` в корне проекта (скопируйте из `.env.example`):
+2. Создайте файл `.env` в корне проекта:
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/school_portal?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/school_portal?schema=public"
 JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
 JWT_EXPIRES_IN="7d"
 PORT=3000
 NODE_ENV=development
 ```
 
-3. Замените `user` и `password` на ваши учетные данные PostgreSQL.
+3. Если у вас другой пароль для PostgreSQL, замените `postgres:postgres` на `ваш_пользователь:ваш_пароль` в DATABASE_URL.
 
 ### 3. Настройка Prisma
 

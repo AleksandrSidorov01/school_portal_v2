@@ -39,13 +39,14 @@ model Class {
   name        String   // Например: "10А", "11Б"
   grade       Int      // Класс (10, 11)
   description String?
+  classTeacherId String? @unique // ID классного руководителя
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Связи
   students   Student[]
   schedules  Schedule[]
-  classTeacher Teacher? @relation("ClassTeacher")
+  classTeacher Teacher? @relation("ClassTeacher", fields: [classTeacherId], references: [id])
 
   @@unique([name, grade])
   @@map("classes")

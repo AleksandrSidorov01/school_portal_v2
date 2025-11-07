@@ -27,14 +27,23 @@
 npm install
 ```
 
-3. Настройте переменные окружения (создайте `.env` файл):
+3. Настройте переменные окружения (создайте `.env` файл в корне проекта):
 ```
-DATABASE_URL="postgresql://user:password@localhost:5432/school_portal"
-JWT_SECRET="your-secret-key"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/school_portal?schema=public"
+JWT_SECRET="school-portal-secret-key-change-in-production"
+JWT_EXPIRES_IN="7d"
 PORT=3000
+NODE_ENV=development
 ```
 
-4. Запустите миграции:
+   **Важно:** Если у вас другой пароль для PostgreSQL, замените `postgres:postgres` на `ваш_пользователь:ваш_пароль`.
+
+4. Сгенерируйте Prisma Client:
+```bash
+npm run prisma:generate
+```
+
+5. Запустите миграции:
 ```bash
 npm run prisma:migrate
 ```
