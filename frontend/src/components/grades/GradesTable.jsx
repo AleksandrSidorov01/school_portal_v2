@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
 import Card from '../ui/Card.jsx';
+import { TableSkeleton } from '../ui/LoadingSkeleton.jsx';
 import EditGradeModal from './EditGradeModal.jsx';
 
 const GradesTable = () => {
@@ -100,10 +101,12 @@ const GradesTable = () => {
   if (loading) {
     return (
       <Card>
+        <Card.Header>
+          <Card.Title>Мои оценки</Card.Title>
+          <Card.Description>Загрузка...</Card.Description>
+        </Card.Header>
         <Card.Content>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground">Загрузка оценок...</div>
-          </div>
+          <TableSkeleton rows={5} columns={5} />
         </Card.Content>
       </Card>
     );

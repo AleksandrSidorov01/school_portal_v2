@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { gradeService } from '../../services/grade.service.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { validateGradeForm } from '../../utils/validation.js';
 import Card from '../ui/Card.jsx';
+import FormField from '../ui/FormField.jsx';
+import ConfirmModal from '../ui/ConfirmModal.jsx';
 
 const EditGradeModal = ({ grade, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -9,8 +12,10 @@ const EditGradeModal = ({ grade, onClose, onSuccess }) => {
     comment: '',
     date: '',
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -49,11 +54,31 @@ const EditGradeModal = ({ grade, onClose, onSuccess }) => {
       ...prev,
       [name]: value,
     }));
+    // Очищаем ошибку для этого поля при изменении
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // Валидация формы
+    const validation = validateGradeForm({
+      ...formData,
+      studentId: gradeData?.studentId || grade?.studentId,
+      subjectId: gradeData?.subjectId || grade?.subjectId,
+    });
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      return;
+    }
+    setErrors({});
+
     setLoading(true);
 
     try {
@@ -71,11 +96,11 @@ const EditGradeModal = ({ grade, onClose, onSuccess }) => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Вы уверены, что хотите удалить эту оценку?')) {
-      return;
-    }
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
 
+  const handleDeleteConfirm = async () => {
     try {
       await gradeService.deleteGrade(grade.id);
       showToast('Оценка успешно удалена', 'success');
@@ -85,6 +110,8 @@ const EditGradeModal = ({ grade, onClose, onSuccess }) => {
     } catch (err) {
       showToast('Ошибка при удалении оценки', 'error');
       console.error(err);
+    } finally {
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -122,16 +149,12 @@ const EditGradeModal = ({ grade, onClose, onSuccess }) => {
             )}
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Оценка *
-                </label>
+              <FormField label="Оценка" error={errors.value} required>
                 <select
                   name="value"
                   value={formData.value}
                   onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring ${errors.value ? 'border-destructive' : ''}`}
                 >
                   <option value="">Выберите оценку</option>
                   <option value="5">5 (Отлично)</option>
@@ -139,41 +162,36 @@ const EditGradeModal = ({ grade, onClose, onSuccess }) => {
                   <option value="3">3 (Удовлетворительно)</option>
                   <option value="2">2 (Неудовлетворительно)</option>
                 </select>
-              </div>
+              </FormField>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Дата *
-                </label>
+              <FormField label="Дата" error={errors.date} required>
                 <input
                   type="date"
                   name="date"
                   value={formData.date}
                   onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring ${errors.date ? 'border-destructive' : ''}`}
                 />
-              </div>
+              </FormField>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium mb-2">
-                  Комментарий
-                </label>
-                <textarea
-                  name="comment"
-                  value={formData.comment}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Добавьте комментарий (необязательно)"
-                />
+                <FormField label="Комментарий">
+                  <textarea
+                    name="comment"
+                    value={formData.comment}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                    placeholder="Добавьте комментарий (необязательно)"
+                  />
+                </FormField>
               </div>
             </div>
 
             <div className="flex justify-between pt-4">
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
                 className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2"
               >
                 Удалить
@@ -198,6 +216,17 @@ const EditGradeModal = ({ grade, onClose, onSuccess }) => {
           </form>
         </Card.Content>
       </Card>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Удаление оценки"
+        message="Вы уверены, что хотите удалить эту оценку? Это действие нельзя отменить."
+        confirmText="Удалить"
+        cancelText="Отмена"
+        variant="destructive"
+      />
     </div>
   );
 };

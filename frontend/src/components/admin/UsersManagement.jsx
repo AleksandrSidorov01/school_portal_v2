@@ -6,6 +6,8 @@ import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
 import SearchBar from '../ui/SearchBar.jsx';
 import Select from '../ui/Select.jsx';
+import ConfirmModal from '../ui/ConfirmModal.jsx';
+import { TableSkeleton } from '../ui/LoadingSkeleton.jsx';
 import CreateUserModal from './CreateUserModal.jsx';
 import EditUserModal from './EditUserModal.jsx';
 import CreateProfileModal from './CreateProfileModal.jsx';
@@ -19,6 +21,7 @@ const UsersManagement = () => {
   const [creatingProfile, setCreatingProfile] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -39,18 +42,25 @@ const UsersManagement = () => {
     }
   };
 
-  const handleDelete = async (userId) => {
-    if (!confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-      return;
-    }
+  const handleDeleteClick = (user) => {
+    setDeleteConfirm({
+      userId: user.id,
+      userName: `${user.firstName} ${user.lastName}`,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
 
     try {
-      await adminService.deleteUser(userId);
+      await adminService.deleteUser(deleteConfirm.userId);
       showToast('Пользователь успешно удален', 'success');
       await loadUsers();
     } catch (err) {
       showToast('Ошибка при удалении пользователя', 'error');
       console.error(err);
+    } finally {
+      setDeleteConfirm(null);
     }
   };
 
@@ -107,10 +117,12 @@ const UsersManagement = () => {
   if (loading) {
     return (
       <Card>
+        <Card.Header>
+          <Card.Title>Управление пользователями</Card.Title>
+          <Card.Description>Загрузка...</Card.Description>
+        </Card.Header>
         <Card.Content>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground">Загрузка пользователей...</div>
-          </div>
+          <TableSkeleton rows={5} columns={6} />
         </Card.Content>
       </Card>
     );
@@ -216,7 +228,7 @@ const UsersManagement = () => {
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(user.id)}
+                          onClick={() => handleDeleteClick(user)}
                           className="text-destructive hover:text-destructive/80 text-sm"
                           disabled={user.role === 'ADMIN'}
                         >
@@ -261,6 +273,19 @@ const UsersManagement = () => {
             setCreatingProfile(null);
             loadUsers();
           }}
+        />
+      )}
+
+      {deleteConfirm && (
+        <ConfirmModal
+          isOpen={!!deleteConfirm}
+          onClose={() => setDeleteConfirm(null)}
+          onConfirm={handleDeleteConfirm}
+          title="Удаление пользователя"
+          message={`Вы уверены, что хотите удалить пользователя "${deleteConfirm.userName}"? Это действие нельзя отменить.`}
+          confirmText="Удалить"
+          cancelText="Отмена"
+          variant="destructive"
         />
       )}
     </div>

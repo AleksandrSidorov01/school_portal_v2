@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { adminService } from '../../services/admin.service.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { validateUserForm } from '../../utils/validation.js';
 import Card from '../ui/Card.jsx';
+import FormField from '../ui/FormField.jsx';
+import Input from '../ui/Input.jsx';
 
 const CreateUserModal = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -11,6 +14,7 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
     lastName: '',
     role: 'STUDENT',
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { showToast } = useToast();
@@ -23,9 +27,33 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
     }));
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+    // Очищаем ошибку для этого поля при изменении
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // Валидация формы
+    const validation = validateUserForm(formData);
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      return;
+    }
+    setErrors({});
+
     setLoading(true);
 
     try {

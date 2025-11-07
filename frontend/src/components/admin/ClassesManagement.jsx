@@ -7,6 +7,8 @@ import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
 import SearchBar from '../ui/SearchBar.jsx';
 import Select from '../ui/Select.jsx';
+import ConfirmModal from '../ui/ConfirmModal.jsx';
+import { TableSkeleton } from '../ui/LoadingSkeleton.jsx';
 import CreateClassModal from './CreateClassModal.jsx';
 import EditClassModal from './EditClassModal.jsx';
 
@@ -18,6 +20,7 @@ const ClassesManagement = () => {
   const [editingClass, setEditingClass] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [gradeFilter, setGradeFilter] = useState('all');
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -38,18 +41,25 @@ const ClassesManagement = () => {
     }
   };
 
-  const handleDelete = async (classId) => {
-    if (!confirm('Вы уверены, что хотите удалить этот класс?')) {
-      return;
-    }
+  const handleDeleteClick = (classItem) => {
+    setDeleteConfirm({
+      classId: classItem.id,
+      className: classItem.name,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
 
     try {
-      await api.delete(`/classes/${classId}`);
+      await api.delete(`/classes/${deleteConfirm.classId}`);
       showToast('Класс успешно удален', 'success');
       await loadData();
     } catch (err) {
       showToast('Ошибка при удалении класса', 'error');
       console.error(err);
+    } finally {
+      setDeleteConfirm(null);
     }
   };
 
@@ -80,10 +90,12 @@ const ClassesManagement = () => {
   if (loading) {
     return (
       <Card>
+        <Card.Header>
+          <Card.Title>Управление классами</Card.Title>
+          <Card.Description>Загрузка...</Card.Description>
+        </Card.Header>
         <Card.Content>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground">Загрузка классов...</div>
-          </div>
+          <TableSkeleton rows={5} columns={5} />
         </Card.Content>
       </Card>
     );
@@ -174,7 +186,7 @@ const ClassesManagement = () => {
                           Редактировать
                         </button>
                         <button
-                          onClick={() => handleDelete(cls.id)}
+                          onClick={() => handleDeleteClick(cls)}
                           className="text-destructive hover:text-destructive/80 text-sm"
                         >
                           Удалить
@@ -207,6 +219,19 @@ const ClassesManagement = () => {
             setEditingClass(null);
             loadData();
           }}
+        />
+      )}
+
+      {deleteConfirm && (
+        <ConfirmModal
+          isOpen={!!deleteConfirm}
+          onClose={() => setDeleteConfirm(null)}
+          onConfirm={handleDeleteConfirm}
+          title="Удаление класса"
+          message={`Вы уверены, что хотите удалить класс "${deleteConfirm.className}"? Это действие нельзя отменить.`}
+          confirmText="Удалить"
+          cancelText="Отмена"
+          variant="destructive"
         />
       )}
     </div>

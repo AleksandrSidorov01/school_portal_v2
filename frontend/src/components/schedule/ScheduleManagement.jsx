@@ -8,6 +8,8 @@ import api from '../../config/api.js';
 import Card from '../ui/Card.jsx';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
+import ConfirmModal from '../ui/ConfirmModal.jsx';
+import { TableSkeleton } from '../ui/LoadingSkeleton.jsx';
 import CreateScheduleModal from './CreateScheduleModal.jsx';
 import EditScheduleModal from './EditScheduleModal.jsx';
 
@@ -21,6 +23,7 @@ const ScheduleManagement = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState(null);
   const [classFilter, setClassFilter] = useState('all');
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -70,18 +73,25 @@ const ScheduleManagement = () => {
     }
   };
 
-  const handleDelete = async (scheduleId) => {
-    if (!confirm('Вы уверены, что хотите удалить эту запись расписания?')) {
-      return;
-    }
+  const handleDeleteClick = (schedule) => {
+    setDeleteConfirm({
+      scheduleId: schedule.id,
+      scheduleInfo: `${schedule.subject?.name || 'Предмет'} - ${schedule.class?.name || 'Класс'}`,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
 
     try {
-      await api.delete(`/schedule/${scheduleId}`);
+      await api.delete(`/schedule/${deleteConfirm.scheduleId}`);
       showToast('Запись расписания успешно удалена', 'success');
       await loadSchedules();
     } catch (err) {
       showToast('Ошибка при удалении записи', 'error');
       console.error(err);
+    } finally {
+      setDeleteConfirm(null);
     }
   };
 
@@ -98,10 +108,12 @@ const ScheduleManagement = () => {
   if (loading) {
     return (
       <Card>
+        <Card.Header>
+          <Card.Title>Управление расписанием</Card.Title>
+          <Card.Description>Загрузка...</Card.Description>
+        </Card.Header>
         <Card.Content>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground">Загрузка расписания...</div>
-          </div>
+          <TableSkeleton rows={5} columns={7} />
         </Card.Content>
       </Card>
     );
@@ -204,7 +216,7 @@ const ScheduleManagement = () => {
                             Редактировать
                           </button>
                           <button
-                            onClick={() => handleDelete(schedule.id)}
+                            onClick={() => handleDeleteClick(schedule)}
                             className="text-destructive hover:text-destructive/80 text-sm"
                           >
                             Удалить
@@ -243,6 +255,19 @@ const ScheduleManagement = () => {
             setEditingSchedule(null);
             loadSchedules();
           }}
+        />
+      )}
+
+      {deleteConfirm && (
+        <ConfirmModal
+          isOpen={!!deleteConfirm}
+          onClose={() => setDeleteConfirm(null)}
+          onConfirm={handleDeleteConfirm}
+          title="Удаление записи расписания"
+          message={`Вы уверены, что хотите удалить запись "${deleteConfirm.scheduleInfo}"? Это действие нельзя отменить.`}
+          confirmText="Удалить"
+          cancelText="Отмена"
+          variant="destructive"
         />
       )}
     </div>

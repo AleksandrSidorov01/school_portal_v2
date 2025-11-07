@@ -5,6 +5,8 @@ import Card from '../ui/Card.jsx';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
 import SearchBar from '../ui/SearchBar.jsx';
+import ConfirmModal from '../ui/ConfirmModal.jsx';
+import { TableSkeleton } from '../ui/LoadingSkeleton.jsx';
 import CreateSubjectModal from './CreateSubjectModal.jsx';
 
 const SubjectsManagement = () => {
@@ -13,6 +15,7 @@ const SubjectsManagement = () => {
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -33,18 +36,25 @@ const SubjectsManagement = () => {
     }
   };
 
-  const handleDelete = async (subjectId) => {
-    if (!confirm('Вы уверены, что хотите удалить этот предмет?')) {
-      return;
-    }
+  const handleDeleteClick = (subject) => {
+    setDeleteConfirm({
+      subjectId: subject.id,
+      subjectName: subject.name,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
 
     try {
-      await adminService.deleteSubject(subjectId);
+      await adminService.deleteSubject(deleteConfirm.subjectId);
       showToast('Предмет успешно удален', 'success');
       await loadSubjects();
     } catch (err) {
       showToast('Ошибка при удалении предмета', 'error');
       console.error(err);
+    } finally {
+      setDeleteConfirm(null);
     }
   };
 
@@ -71,10 +81,12 @@ const SubjectsManagement = () => {
   if (loading) {
     return (
       <Card>
+        <Card.Header>
+          <Card.Title>Управление предметами</Card.Title>
+          <Card.Description>Загрузка...</Card.Description>
+        </Card.Header>
         <Card.Content>
-          <div className="flex items-center justify-center py-8">
-            <div className="text-muted-foreground">Загрузка предметов...</div>
-          </div>
+          <TableSkeleton rows={5} columns={4} />
         </Card.Content>
       </Card>
     );
@@ -142,7 +154,7 @@ const SubjectsManagement = () => {
                     </Table.Cell>
                     <Table.Cell>
                       <button
-                        onClick={() => handleDelete(subject.id)}
+                        onClick={() => handleDeleteClick(subject)}
                         className="text-destructive hover:text-destructive/80 text-sm"
                       >
                         Удалить
@@ -163,6 +175,19 @@ const SubjectsManagement = () => {
             setShowCreateModal(false);
             loadSubjects();
           }}
+        />
+      )}
+
+      {deleteConfirm && (
+        <ConfirmModal
+          isOpen={!!deleteConfirm}
+          onClose={() => setDeleteConfirm(null)}
+          onConfirm={handleDeleteConfirm}
+          title="Удаление предмета"
+          message={`Вы уверены, что хотите удалить предмет "${deleteConfirm.subjectName}"? Это действие нельзя отменить.`}
+          confirmText="Удалить"
+          cancelText="Отмена"
+          variant="destructive"
         />
       )}
     </div>
