@@ -5,6 +5,9 @@ import UsersManagement from '../admin/UsersManagement.jsx';
 import ClassesManagement from '../admin/ClassesManagement.jsx';
 import SubjectsManagement from '../admin/SubjectsManagement.jsx';
 import ScheduleManagement from '../schedule/ScheduleManagement.jsx';
+import GradeStatistics from '../admin/GradeStatistics.jsx';
+import ClassStatistics from '../admin/ClassStatistics.jsx';
+import Reports from '../admin/Reports.jsx';
 import Card from '../ui/Card.jsx';
 
 const AdminDashboard = () => {
@@ -13,8 +16,11 @@ const AdminDashboard = () => {
 
   const tabs = [
     { id: 'statistics', name: 'Статистика', icon: '📊' },
+    { id: 'grade-stats', name: 'Успеваемость', icon: '📈' },
+    { id: 'class-stats', name: 'Классы', icon: '🏫' },
+    { id: 'reports', name: 'Отчеты', icon: '📄' },
     { id: 'users', name: 'Пользователи', icon: '👥' },
-    { id: 'classes', name: 'Классы', icon: '🏫' },
+    { id: 'classes', name: 'Управление классами', icon: '🏛️' },
     { id: 'subjects', name: 'Предметы', icon: '📚' },
     { id: 'schedule', name: 'Расписание', icon: '📅' },
   ];
@@ -84,6 +90,9 @@ const AdminDashboard = () => {
               <StatisticsCards />
             </div>
           )}
+          {activeTab === 'grade-stats' && <GradeStatistics />}
+          {activeTab === 'class-stats' && <ClassStatistics />}
+          {activeTab === 'reports' && <Reports />}
           {activeTab === 'users' && <UsersManagement />}
           {activeTab === 'classes' && <ClassesManagement />}
           {activeTab === 'subjects' && <SubjectsManagement />}
