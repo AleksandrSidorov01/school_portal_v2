@@ -28,7 +28,8 @@ export const validateClass = (data) => {
   const schema = Joi.object({
     name: Joi.string().required(),
     grade: Joi.number().integer().min(1).max(11).required(),
-    description: Joi.string().optional(),
+    description: Joi.string().optional().allow(''),
+    classTeacherId: Joi.string().uuid().optional().allow(null, ''),
   });
 
   return schema.validate(data);

@@ -4,12 +4,16 @@ import Card from '../ui/Card.jsx';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
 import CreateUserModal from './CreateUserModal.jsx';
+import EditUserModal from './EditUserModal.jsx';
+import CreateProfileModal from './CreateProfileModal.jsx';
 
 const UsersManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [creatingProfile, setCreatingProfile] = useState(null);
 
   useEffect(() => {
     loadUsers();
@@ -148,13 +152,29 @@ const UsersManagement = () => {
                       {formatDate(user.createdAt)}
                     </Table.Cell>
                     <Table.Cell>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        className="text-destructive hover:text-destructive/80 text-sm"
-                        disabled={user.role === 'ADMIN'}
-                      >
-                        {user.role === 'ADMIN' ? '-' : 'Удалить'}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setEditingUser(user)}
+                          className="text-primary hover:text-primary/80 text-sm"
+                        >
+                          Редактировать
+                        </button>
+                        {!user.student && !user.teacher && (
+                          <button
+                            onClick={() => setCreatingProfile(user)}
+                            className="text-green-600 hover:text-green-700 text-sm"
+                          >
+                            Создать профиль
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="text-destructive hover:text-destructive/80 text-sm"
+                          disabled={user.role === 'ADMIN'}
+                        >
+                          {user.role === 'ADMIN' ? '-' : 'Удалить'}
+                        </button>
+                      </div>
                     </Table.Cell>
                   </Table.Row>
                 ))}
@@ -169,6 +189,28 @@ const UsersManagement = () => {
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);
+            loadUsers();
+          }}
+        />
+      )}
+
+      {editingUser && (
+        <EditUserModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onSuccess={() => {
+            setEditingUser(null);
+            loadUsers();
+          }}
+        />
+      )}
+
+      {creatingProfile && (
+        <CreateProfileModal
+          user={creatingProfile}
+          onClose={() => setCreatingProfile(null)}
+          onSuccess={() => {
+            setCreatingProfile(null);
             loadUsers();
           }}
         />

@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import StatisticsCards from '../admin/StatisticsCards.jsx';
 import UsersManagement from '../admin/UsersManagement.jsx';
 import ClassesManagement from '../admin/ClassesManagement.jsx';
-import Card from '../ui/Card.jsx';
+import SubjectsManagement from '../admin/SubjectsManagement.jsx';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -83,16 +83,7 @@ const AdminDashboard = () => {
           )}
           {activeTab === 'users' && <UsersManagement />}
           {activeTab === 'classes' && <ClassesManagement />}
-          {activeTab === 'subjects' && (
-            <Card>
-              <Card.Header>
-                <Card.Title>Управление предметами</Card.Title>
-                <Card.Description>
-                  Функционал в разработке
-                </Card.Description>
-              </Card.Header>
-            </Card>
-          )}
+          {activeTab === 'subjects' && <SubjectsManagement />}
         </div>
       </main>
     </div>

@@ -133,14 +133,45 @@ export const createClass = async (req, res, next) => {
 export const updateClass = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, grade, description } = req.validatedData;
+    const { name, grade, description, classTeacherId } = req.validatedData;
+
+    const updateData = {
+      name,
+      grade,
+      description,
+    };
+
+    if (classTeacherId !== undefined) {
+      if (classTeacherId === null || classTeacherId === '') {
+        updateData.classTeacherId = null;
+      } else {
+        // Проверка существования учителя
+        const teacher = await prisma.teacher.findUnique({
+          where: { id: classTeacherId },
+        });
+
+        if (!teacher) {
+          return res.status(404).json({ message: 'Учитель не найден' });
+        }
+
+        updateData.classTeacherId = classTeacherId;
+      }
+    }
 
     const classItem = await prisma.class.update({
       where: { id },
-      data: {
-        name,
-        grade,
-        description,
+      data: updateData,
+      include: {
+        classTeacher: {
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
       },
     });
 

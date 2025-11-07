@@ -120,6 +120,63 @@ export const createUser = async (req, res, next) => {
   }
 };
 
+// Обновить пользователя (админ)
+export const updateUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { email, firstName, lastName, role } = req.body;
+
+    // Проверка существования пользователя
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!existingUser) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+
+    // Если email изменяется, проверяем уникальность
+    if (email && email !== existingUser.email) {
+      const emailExists = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (emailExists) {
+        return res.status(400).json({ message: 'Пользователь с таким email уже существует' });
+      }
+    }
+
+    const updateData = {};
+    if (email) updateData.email = email;
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (role) updateData.role = role;
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    res.json({
+      message: 'Пользователь успешно обновлен',
+      user,
+    });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+    next(error);
+  }
+};
+
 // Удалить пользователя (админ)
 export const deleteUser = async (req, res, next) => {
   try {
@@ -230,4 +287,3 @@ export const deleteSubject = async (req, res, next) => {
     next(error);
   }
 };
-

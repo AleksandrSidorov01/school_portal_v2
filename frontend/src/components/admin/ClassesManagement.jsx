@@ -4,12 +4,15 @@ import api from '../../config/api.js';
 import Card from '../ui/Card.jsx';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
+import CreateClassModal from './CreateClassModal.jsx';
+import EditClassModal from './EditClassModal.jsx';
 
 const ClassesManagement = () => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingClass, setEditingClass] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -111,12 +114,20 @@ const ClassesManagement = () => {
                       )}
                     </Table.Cell>
                     <Table.Cell>
-                      <button
-                        onClick={() => handleDelete(cls.id)}
-                        className="text-destructive hover:text-destructive/80 text-sm"
-                      >
-                        Удалить
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setEditingClass(cls)}
+                          className="text-primary hover:text-primary/80 text-sm"
+                        >
+                          Редактировать
+                        </button>
+                        <button
+                          onClick={() => handleDelete(cls.id)}
+                          className="text-destructive hover:text-destructive/80 text-sm"
+                        >
+                          Удалить
+                        </button>
+                      </div>
                     </Table.Cell>
                   </Table.Row>
                 ))}
@@ -125,6 +136,27 @@ const ClassesManagement = () => {
           )}
         </Card.Content>
       </Card>
+
+      {showCreateModal && (
+        <CreateClassModal
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            setShowCreateModal(false);
+            loadData();
+          }}
+        />
+      )}
+
+      {editingClass && (
+        <EditClassModal
+          classItem={editingClass}
+          onClose={() => setEditingClass(null)}
+          onSuccess={() => {
+            setEditingClass(null);
+            loadData();
+          }}
+        />
+      )}
     </div>
   );
 };

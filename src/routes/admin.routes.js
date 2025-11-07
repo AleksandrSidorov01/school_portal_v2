@@ -3,6 +3,7 @@ import {
   getStatistics,
   getAllUsers,
   createUser,
+  updateUser,
   deleteUser,
   getAllSubjects,
   createSubject,
@@ -22,6 +23,7 @@ router.get('/statistics', getStatistics);
 // Управление пользователями
 router.get('/users', getAllUsers);
 router.post('/users', createUser);
+router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 
 // Управление предметами
