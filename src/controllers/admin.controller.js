@@ -113,6 +113,12 @@ export const createUser = async (req, res, next) => {
       },
     });
 
+    // Логируем действие
+    await logActivity(req.user.id, 'create', 'user', user.id, {
+      email: user.email,
+      role: user.role,
+    }, req);
+
     res.status(201).json({
       message: 'Пользователь успешно создан',
       user,
@@ -193,6 +199,15 @@ export const deleteUser = async (req, res, next) => {
     // Нельзя удалить самого себя
     if (id === req.user.id) {
       return res.status(400).json({ message: 'Нельзя удалить самого себя' });
+    }
+
+    // Получаем информацию о пользователе перед удалением для логирования
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
     }
 
     await prisma.user.delete({
