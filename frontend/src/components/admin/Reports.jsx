@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { gradeService } from '../../services/grade.service.js';
 import { classService } from '../../services/class.service.js';
 import { adminService } from '../../services/admin.service.js';
+import { exportToCSV, exportToJSON, exportToExcel, exportToPDF, dataToHTMLTable } from '../../utils/export.js';
 import Card from '../ui/Card.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 
@@ -40,84 +41,72 @@ const Reports = () => {
     }
   };
 
-  const exportToCSV = () => {
+  const handleExport = (format) => {
     if (!reportData || reportData.length === 0) {
       showToast('Нет данных для экспорта', 'warning');
       return;
     }
 
-    let csv = '';
-    let headers = [];
-    let rows = [];
+    try {
+      let headers = [];
+      let rows = [];
 
-    switch (reportType) {
-      case 'grades':
-        headers = ['Дата', 'Ученик', 'Предмет', 'Оценка', 'Учитель', 'Комментарий'];
-        rows = reportData.map(grade => [
-          grade.date ? new Date(grade.date).toLocaleDateString('ru-RU') : '',
-          grade.student?.user ? `${grade.student.user.firstName} ${grade.student.user.lastName}` : '',
-          grade.subject?.name || '',
-          grade.value || '',
-          grade.teacher?.user ? `${grade.teacher.user.firstName} ${grade.teacher.user.lastName}` : '',
-          grade.comment || '',
-        ]);
-        break;
-      case 'classes':
-        headers = ['Название', 'Класс', 'Учеников', 'Классный руководитель'];
-        rows = reportData.map(cls => [
-          cls.name || '',
-          cls.grade || '',
-          cls.students?.length || 0,
-          cls.classTeacher?.user ? `${cls.classTeacher.user.firstName} ${cls.classTeacher.user.lastName}` : '',
-        ]);
-        break;
-      case 'subjects':
-        headers = ['Название', 'Описание', 'Учитель'];
-        rows = reportData.map(subject => [
-          subject.name || '',
-          subject.description || '',
-          subject.teacher?.user ? `${subject.teacher.user.firstName} ${subject.teacher.user.lastName}` : '',
-        ]);
-        break;
+      switch (reportType) {
+        case 'grades':
+          headers = ['Дата', 'Ученик', 'Предмет', 'Оценка', 'Учитель', 'Комментарий'];
+          rows = reportData.map(grade => [
+            grade.date ? new Date(grade.date).toLocaleDateString('ru-RU') : '',
+            grade.student?.user ? `${grade.student.user.firstName} ${grade.student.user.lastName}` : '',
+            grade.subject?.name || '',
+            grade.value || '',
+            grade.teacher?.user ? `${grade.teacher.user.firstName} ${grade.teacher.user.lastName}` : '',
+            grade.comment || '',
+          ]);
+          break;
+        case 'classes':
+          headers = ['Название', 'Класс', 'Учеников', 'Классный руководитель'];
+          rows = reportData.map(cls => [
+            cls.name || '',
+            cls.grade || '',
+            cls.students?.length || 0,
+            cls.classTeacher?.user ? `${cls.classTeacher.user.firstName} ${cls.classTeacher.user.lastName}` : '',
+          ]);
+          break;
+        case 'subjects':
+          headers = ['Название', 'Описание', 'Учитель'];
+          rows = reportData.map(subject => [
+            subject.name || '',
+            subject.description || '',
+            subject.teacher?.user ? `${subject.teacher.user.firstName} ${subject.teacher.user.lastName}` : '',
+          ]);
+          break;
+      }
+
+      switch (format) {
+        case 'csv':
+          exportToCSV(rows, headers, `report_${reportType}`);
+          showToast('Отчет успешно экспортирован в CSV', 'success');
+          break;
+        case 'json':
+          exportToJSON(reportData, `report_${reportType}`);
+          showToast('Отчет успешно экспортирован в JSON', 'success');
+          break;
+        case 'excel':
+          exportToExcel(rows, headers, `report_${reportType}`);
+          showToast('Отчет успешно экспортирован в Excel', 'success');
+          break;
+        case 'pdf':
+          const htmlContent = dataToHTMLTable(rows, headers);
+          exportToPDF(`Отчет: ${reportType}`, htmlContent, `report_${reportType}`);
+          showToast('Открыто окно печати для PDF', 'info');
+          break;
+        default:
+          showToast('Неизвестный формат экспорта', 'error');
+      }
+    } catch (err) {
+      showToast('Ошибка при экспорте отчета', 'error');
+      console.error(err);
     }
-
-    csv = headers.join(',') + '\n';
-    rows.forEach(row => {
-      csv += row.map(cell => `"${cell}"`).join(',') + '\n';
-    });
-
-    // Создаем и скачиваем файл
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `report_${reportType}_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    showToast('Отчет успешно экспортирован', 'success');
-  };
-
-  const exportToJSON = () => {
-    if (!reportData || reportData.length === 0) {
-      showToast('Нет данных для экспорта', 'warning');
-      return;
-    }
-
-    const json = JSON.stringify(reportData, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `report_${reportType}_${new Date().toISOString().split('T')[0]}.json`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    showToast('Отчет успешно экспортирован', 'success');
   };
 
   return (
@@ -156,20 +145,41 @@ const Reports = () => {
               </button>
 
               {reportData && reportData.length > 0 && (
-                <>
+                <div className="relative group">
                   <button
-                    onClick={exportToCSV}
                     className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
                   >
-                    Экспорт в CSV
+                    Экспорт ▼
                   </button>
-                  <button
-                    onClick={exportToJSON}
-                    className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                  >
-                    Экспорт в JSON
-                  </button>
-                </>
+                  <div className="absolute right-0 mt-2 w-48 bg-card border rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                    <div className="py-1">
+                      <button
+                        onClick={() => handleExport('csv')}
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-accent"
+                      >
+                        Экспорт в CSV
+                      </button>
+                      <button
+                        onClick={() => handleExport('json')}
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-accent"
+                      >
+                        Экспорт в JSON
+                      </button>
+                      <button
+                        onClick={() => handleExport('excel')}
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-accent"
+                      >
+                        Экспорт в Excel
+                      </button>
+                      <button
+                        onClick={() => handleExport('pdf')}
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-accent"
+                      >
+                        Экспорт в PDF
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 

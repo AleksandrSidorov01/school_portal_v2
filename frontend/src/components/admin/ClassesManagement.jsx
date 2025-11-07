@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { classService } from '../../services/class.service.js';
 import api from '../../config/api.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { exportToCSV, exportToJSON, exportToExcel, exportToPDF, dataToHTMLTable } from '../../utils/export.js';
 import Card from '../ui/Card.jsx';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
@@ -115,12 +116,67 @@ const ClassesManagement = () => {
                 Всего классов: {classes.length} {filteredClasses.length !== classes.length && `(найдено: ${filteredClasses.length})`}
               </Card.Description>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
-            >
-              + Создать класс
-            </button>
+            <div className="flex gap-2">
+              <div className="relative group">
+                <button
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                >
+                  Экспорт ▼
+                </button>
+                <div className="absolute right-0 mt-2 w-48 bg-card border rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        const exportData = filteredClasses.map(cls => [
+                          cls.name || '',
+                          cls.grade || '',
+                          cls.students?.length || 0,
+                          cls.classTeacher?.user ? `${cls.classTeacher.user.firstName} ${cls.classTeacher.user.lastName}` : 'Не назначен',
+                        ]);
+                        const headers = ['Название', 'Класс', 'Учеников', 'Классный руководитель'];
+                        exportToCSV(exportData, headers, 'classes');
+                        showToast('Данные экспортированы в CSV', 'success');
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-accent"
+                    >
+                      Экспорт в CSV
+                    </button>
+                    <button
+                      onClick={() => {
+                        exportToJSON(filteredClasses, 'classes');
+                        showToast('Данные экспортированы в JSON', 'success');
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-accent"
+                    >
+                      Экспорт в JSON
+                    </button>
+                    <button
+                      onClick={() => {
+                        const exportData = filteredClasses.map(cls => [
+                          cls.name || '',
+                          cls.grade || '',
+                          cls.students?.length || 0,
+                          cls.classTeacher?.user ? `${cls.classTeacher.user.firstName} ${cls.classTeacher.user.lastName}` : 'Не назначен',
+                        ]);
+                        const headers = ['Название', 'Класс', 'Учеников', 'Классный руководитель'];
+                        const htmlContent = dataToHTMLTable(exportData, headers);
+                        exportToPDF('Список классов', htmlContent, 'classes');
+                        showToast('Открыто окно печати для PDF', 'info');
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-accent"
+                    >
+                      Экспорт в PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+              >
+                + Создать класс
+              </button>
+            </div>
           </div>
         </Card.Header>
         <Card.Content>
