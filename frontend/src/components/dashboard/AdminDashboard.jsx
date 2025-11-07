@@ -4,6 +4,7 @@ import StatisticsCards from '../admin/StatisticsCards.jsx';
 import UsersManagement from '../admin/UsersManagement.jsx';
 import ClassesManagement from '../admin/ClassesManagement.jsx';
 import SubjectsManagement from '../admin/SubjectsManagement.jsx';
+import Card from '../ui/Card.jsx';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
