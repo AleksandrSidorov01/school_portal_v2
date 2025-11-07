@@ -5,10 +5,13 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  createStudentProfile,
+  createTeacherProfile,
   getAllSubjects,
   createSubject,
   deleteSubject,
 } from '../controllers/admin.controller.js';
+import { getActivityLogsController } from '../controllers/activityLog.controller.js';
 import { authenticate, isAdmin } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -30,6 +33,13 @@ router.delete('/users/:id', deleteUser);
 router.get('/subjects', getAllSubjects);
 router.post('/subjects', createSubject);
 router.delete('/subjects/:id', deleteSubject);
+
+// Профили
+router.post('/users/:userId/student-profile', createStudentProfile);
+router.post('/users/:userId/teacher-profile', createTeacherProfile);
+
+// Логи активности (только для админов)
+router.get('/activity-logs', getActivityLogsController);
 
 export default router;
 

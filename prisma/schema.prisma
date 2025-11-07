@@ -21,11 +21,13 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Связи
-  student   Student?
-  teacher   Teacher?
+      student   Student?
+      teacher   Teacher?
+      notifications Notification[]
+      activityLogs ActivityLog[]
 
-  @@map("users")
-}
+      @@map("users")
+    }
 
 // Класс
 model Class {
@@ -102,6 +104,36 @@ model Subject {
   schedules   Schedule[]
 
   @@map("subjects")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // grade_added, grade_updated, profile_created, etc.
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String   // create, update, delete
+  entity    String   // user, class, subject, grade, etc.
+  entityId  String?
+  details   String?  // JSON string with details
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("activity_logs")
 }
 
 // Оценка

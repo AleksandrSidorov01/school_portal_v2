@@ -8,6 +8,9 @@ import ScheduleManagement from '../schedule/ScheduleManagement.jsx';
 import GradeStatistics from '../admin/GradeStatistics.jsx';
 import ClassStatistics from '../admin/ClassStatistics.jsx';
 import Reports from '../admin/Reports.jsx';
+import ActivityLogs from '../admin/ActivityLogs.jsx';
+import BackupManagement from '../admin/BackupManagement.jsx';
+import NotificationBell from '../notifications/NotificationBell.jsx';
 import Card from '../ui/Card.jsx';
 
 const AdminDashboard = () => {
@@ -19,6 +22,8 @@ const AdminDashboard = () => {
     { id: 'grade-stats', name: 'Успеваемость', icon: '📈' },
     { id: 'class-stats', name: 'Классы', icon: '🏫' },
     { id: 'reports', name: 'Отчеты', icon: '📄' },
+    { id: 'activity', name: 'История', icon: '📝' },
+    { id: 'backup', name: 'Резервные копии', icon: '💾' },
     { id: 'users', name: 'Пользователи', icon: '👥' },
     { id: 'classes', name: 'Управление классами', icon: '🏛️' },
     { id: 'subjects', name: 'Предметы', icon: '📚' },
@@ -38,6 +43,7 @@ const AdminDashboard = () => {
               <div className="text-sm text-muted-foreground">
                 {user?.firstName} {user?.lastName} (Администратор)
               </div>
+              <NotificationBell />
               <button
                 onClick={logout}
                 className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-10 px-4 py-2"
@@ -93,6 +99,8 @@ const AdminDashboard = () => {
           {activeTab === 'grade-stats' && <GradeStatistics />}
           {activeTab === 'class-stats' && <ClassStatistics />}
           {activeTab === 'reports' && <Reports />}
+          {activeTab === 'activity' && <ActivityLogs />}
+          {activeTab === 'backup' && <BackupManagement />}
           {activeTab === 'users' && <UsersManagement />}
           {activeTab === 'classes' && <ClassesManagement />}
           {activeTab === 'subjects' && <SubjectsManagement />}

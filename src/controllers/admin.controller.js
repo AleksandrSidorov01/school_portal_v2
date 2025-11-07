@@ -165,6 +165,12 @@ export const updateUser = async (req, res, next) => {
       },
     });
 
+    // Логируем действие
+    await logActivity(req.user.id, 'update', 'user', user.id, {
+      email: user.email,
+      role: user.role,
+    }, req);
+
     res.json({
       message: 'Пользователь успешно обновлен',
       user,
@@ -190,6 +196,11 @@ export const deleteUser = async (req, res, next) => {
     await prisma.user.delete({
       where: { id },
     });
+
+    // Логируем действие
+    await logActivity(req.user.id, 'delete', 'user', id, {
+      email: user.email,
+    }, req);
 
     res.json({ message: 'Пользователь успешно удален' });
   } catch (error) {

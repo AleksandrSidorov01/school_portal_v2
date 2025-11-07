@@ -1,4 +1,6 @@
 import prisma from '../config/database.js';
+import { notifyGradeAdded } from '../utils/notifications.js';
+import { logActivity } from '../utils/activityLog.js';
 
 // Получить все оценки
 export const getAllGrades = async (req, res, next) => {
@@ -199,6 +201,17 @@ export const createGrade = async (req, res, next) => {
       },
     });
 
+    // Создаем уведомление для ученика
+    await notifyGradeAdded(studentId, value, grade.subject.name);
+
+    // Логируем действие
+    await logActivity(req.user.id, 'create', 'grade', grade.id, {
+      studentId,
+      subjectId,
+      value,
+      subjectName: grade.subject.name,
+    }, req);
+
     res.status(201).json({
       message: 'Оценка успешно создана',
       grade,
@@ -271,6 +284,17 @@ export const updateGrade = async (req, res, next) => {
         },
       },
     });
+
+    // Создаем уведомление об изменении оценки
+    if (updateData.value) {
+      await notifyGradeUpdated(grade.studentId, updateData.value, grade.subject.name);
+    }
+
+    // Логируем действие
+    await logActivity(req.user.id, 'update', 'grade', grade.id, {
+      changes: updateData,
+      subjectName: grade.subject.name,
+    }, req);
 
     res.json({
       message: 'Оценка успешно обновлена',

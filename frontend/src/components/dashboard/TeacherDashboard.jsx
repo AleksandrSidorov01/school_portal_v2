@@ -4,6 +4,7 @@ import { teacherService } from '../../services/teacher.service.js';
 import CreateGradeForm from '../grades/CreateGradeForm.jsx';
 import ClassesList from '../classes/ClassesList.jsx';
 import TeacherScheduleView from '../schedule/TeacherScheduleView.jsx';
+import NotificationBell from '../notifications/NotificationBell.jsx';
 import Card from '../ui/Card.jsx';
 
 const TeacherDashboard = () => {

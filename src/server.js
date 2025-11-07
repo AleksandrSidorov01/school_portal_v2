@@ -8,6 +8,8 @@ import teacherRoutes from './routes/teacher.routes.js';
 import gradeRoutes from './routes/grade.routes.js';
 import scheduleRoutes from './routes/schedule.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import backupRoutes from './routes/backup.routes.js';
 
 const app = express();
 
@@ -24,6 +26,10 @@ app.use('/api/teachers', teacherRoutes);
 app.use('/api/grades', gradeRoutes);
 app.use('/api/schedule', scheduleRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/backup', backupRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/backup', backupRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
