@@ -48,5 +48,27 @@ export const adminService = {
     const response = await api.delete(`/admin/subjects/${subjectId}`);
     return response.data;
   },
+
+  // Получить логи активности
+  getActivityLogs: async (queryString = '') => {
+    const response = await api.get(`/admin/activity-logs${queryString ? `?${queryString}` : ''}`);
+    return response.data.logs;
+  },
+
+  // Резервное копирование
+  createBackup: async () => {
+    const response = await api.post('/backup');
+    return response.data;
+  },
+
+  getBackups: async () => {
+    const response = await api.get('/backup');
+    return response.data.backups;
+  },
+
+  deleteBackup: async (filename) => {
+    const response = await api.delete(`/backup/${filename}`);
+    return response.data;
+  },
 };
 

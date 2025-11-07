@@ -28,8 +28,6 @@ app.use('/api/schedule', scheduleRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/backup', backupRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/backup', backupRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

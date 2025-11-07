@@ -335,9 +335,27 @@ export const deleteGrade = async (req, res, next) => {
       }
     }
 
+    // Получаем информацию об оценке перед удалением для логирования
+    const grade = await prisma.grade.findUnique({
+      where: { id },
+      include: {
+        subject: true,
+        student: true,
+      },
+    });
+
     await prisma.grade.delete({
       where: { id },
     });
+
+    // Логируем действие
+    if (grade) {
+      await logActivity(req.user.id, 'delete', 'grade', id, {
+        studentId: grade.studentId,
+        subjectName: grade.subject?.name,
+        value: grade.value,
+      }, req);
+    }
 
     res.json({ message: 'Оценка успешно удалена' });
   } catch (error) {
