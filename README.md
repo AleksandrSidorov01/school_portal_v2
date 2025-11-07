@@ -48,7 +48,7 @@ npm run prisma:generate
 npm run prisma:migrate
 ```
 
-5. Запустите сервер:
+6. Запустите сервер:
 ```bash
 npm run dev
 ```
