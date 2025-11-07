@@ -13,11 +13,19 @@
 
 ## Технологический стек
 
-- **Backend**: Node.js + Express
-- **База данных**: PostgreSQL
-- **ORM**: Prisma
-- **Аутентификация**: JWT
-- **Валидация**: Joi
+### Backend
+- **Node.js + Express** - серверная часть
+- **PostgreSQL** - база данных
+- **Prisma** - ORM
+- **JWT** - аутентификация
+- **Joi** - валидация
+
+### Frontend
+- **React 19** - UI библиотека
+- **React Router** - маршрутизация
+- **Axios** - HTTP клиент
+- **Tailwind CSS** - стилизация
+- **Vite** - сборщик
 
 ## Установка
 
@@ -53,6 +61,34 @@ npm run prisma:migrate
 npm run dev
 ```
 
+### Запуск Frontend
+
+1. Перейдите в папку frontend:
+```bash
+cd frontend
+```
+
+2. Установите зависимости:
+```bash
+npm install
+npm install react-router-dom axios
+npm install -D tailwindcss postcss autoprefixer
+```
+
+3. Создайте файл `.env` в папке `frontend`:
+```env
+VITE_API_URL=http://localhost:3000/api
+```
+
+4. Запустите frontend:
+```bash
+npm run dev
+```
+
+Frontend будет доступен по адресу: `http://localhost:5173`
+
+Подробная инструкция: см. [FRONTEND_SETUP.md](FRONTEND_SETUP.md)
+
 **Если порт 3000 занят:**
 - Остановите процесс: `npm run stop`
 - Или найдите и остановите процесс вручную: `netstat -ano | findstr :3000`
@@ -62,9 +98,15 @@ npm run dev
 
 ```
 school_portal/
-├── src/
+├── frontend/           # React приложение
+│   ├── src/
+│   │   ├── components/ # React компоненты
+│   │   ├── pages/      # Страницы приложения
+│   │   ├── services/   # Сервисы для работы с API
+│   │   └── ...
+│   └── package.json
+├── src/                # Backend
 │   ├── controllers/    # Контроллеры для обработки запросов
-│   ├── models/         # Prisma модели (схема в prisma/schema.prisma)
 │   ├── routes/         # Маршруты API
 │   ├── middleware/     # Middleware (auth, validation, etc.)
 │   ├── utils/          # Утилиты
