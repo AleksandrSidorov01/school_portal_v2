@@ -44,6 +44,7 @@ export const scheduleService = {
   getAllSchedules: async (filters = {}) => {
     const params = new URLSearchParams();
     if (filters.classId) params.append('classId', filters.classId);
+    if (filters.teacherId) params.append('teacherId', filters.teacherId);
     if (filters.dayOfWeek) params.append('dayOfWeek', filters.dayOfWeek);
     
     const response = await api.get(`/schedule?${params.toString()}`);

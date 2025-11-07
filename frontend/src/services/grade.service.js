@@ -47,9 +47,28 @@ export const gradeService = {
     const params = new URLSearchParams();
     if (filters.subjectId) params.append('subjectId', filters.subjectId);
     if (filters.teacherId) params.append('teacherId', filters.teacherId);
+    if (filters.studentId) params.append('studentId', filters.studentId);
     
     const response = await api.get(`/grades?${params.toString()}`);
     return response.data.grades;
+  },
+
+  // Создать оценку
+  createGrade: async (gradeData) => {
+    const response = await api.post('/grades', gradeData);
+    return response.data;
+  },
+
+  // Обновить оценку
+  updateGrade: async (id, gradeData) => {
+    const response = await api.put(`/grades/${id}`, gradeData);
+    return response.data;
+  },
+
+  // Удалить оценку
+  deleteGrade: async (id) => {
+    const response = await api.delete(`/grades/${id}`);
+    return response.data;
   },
 };
 
