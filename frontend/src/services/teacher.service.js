@@ -27,5 +27,11 @@ export const teacherService = {
     }
     return [];
   },
+
+  // Получить всех учителей (для админа)
+  getAllTeachers: async () => {
+    const response = await api.get('/teachers');
+    return response.data.teachers;
+  },
 };
 
