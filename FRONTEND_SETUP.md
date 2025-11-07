@@ -6,14 +6,29 @@
 
 ```bash
 cd frontend
-npm install
+npm install --ignore-scripts
 ```
+
+**Примечание:** Флаг `--ignore-scripts` используется для обхода проблемы с `patch-package` на Windows.
 
 Затем установите дополнительные пакеты:
 
 ```bash
-npm install react-router-dom axios
-npm install -D tailwindcss postcss autoprefixer
+npm install react-router-dom axios --ignore-scripts
+npm install -D tailwindcss postcss autoprefixer --ignore-scripts
+```
+
+### Альтернативный способ (если первый не работает)
+
+Если возникают проблемы, попробуйте установить зависимости по одной:
+
+```bash
+npm install --legacy-peer-deps
+npm install react-router-dom --legacy-peer-deps
+npm install axios --legacy-peer-deps
+npm install -D tailwindcss --legacy-peer-deps
+npm install -D postcss --legacy-peer-deps
+npm install -D autoprefixer --legacy-peer-deps
 ```
 
 ## Шаг 2: Инициализация Tailwind CSS
@@ -94,21 +109,17 @@ frontend/
 
 ### Ошибка при установке зависимостей
 
-Если возникает ошибка с `patch-package`, попробуйте:
+Если возникает ошибка с `patch-package`, используйте флаг `--ignore-scripts`:
 
 ```bash
-npm install --legacy-peer-deps
+npm install --ignore-scripts
+npm install react-router-dom axios --ignore-scripts
+npm install -D tailwindcss postcss autoprefixer --ignore-scripts
 ```
 
-Или установите зависимости по одной:
+Это пропустит postinstall скрипты, которые вызывают проблему.
 
-```bash
-npm install react-router-dom
-npm install axios
-npm install -D tailwindcss
-npm install -D postcss
-npm install -D autoprefixer
-```
+**Важно:** Это безопасно для нашего проекта, так как мы не используем патчи для зависимостей.
 
 ### Порт 5173 занят
 
