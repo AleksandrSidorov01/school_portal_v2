@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { classService } from '../../services/class.service.js';
-import { teacherService } from '../../services/teacher.service.js';
 import api from '../../config/api.js';
 import Card from '../ui/Card.jsx';
 import Table from '../ui/Table.jsx';
@@ -8,7 +7,6 @@ import Badge from '../ui/Badge.jsx';
 
 const ClassesManagement = () => {
   const [classes, setClasses] = useState([]);
-  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -20,12 +18,8 @@ const ClassesManagement = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [classesData, teachersData] = await Promise.all([
-        classService.getAllClasses(),
-        teacherService.getAllTeachers(),
-      ]);
+      const classesData = await classService.getAllClasses();
       setClasses(classesData || []);
-      setTeachers(teachersData || []);
       setError('');
     } catch (err) {
       setError('Не удалось загрузить данные');
