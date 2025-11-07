@@ -6,6 +6,7 @@ import Card from '../ui/Card.jsx';
 import Table from '../ui/Table.jsx';
 import Badge from '../ui/Badge.jsx';
 import SearchBar from '../ui/SearchBar.jsx';
+import Select from '../ui/Select.jsx';
 import CreateClassModal from './CreateClassModal.jsx';
 import EditClassModal from './EditClassModal.jsx';
 
