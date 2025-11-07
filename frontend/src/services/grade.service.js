@@ -55,7 +55,12 @@ export const gradeService = {
 
   // Создать оценку
   createGrade: async (gradeData) => {
-    const response = await api.post('/grades', gradeData);
+    // Убеждаемся, что value - это число
+    const data = {
+      ...gradeData,
+      value: typeof gradeData.value === 'string' ? parseInt(gradeData.value) : gradeData.value,
+    };
+    const response = await api.post('/grades', data);
     return response.data;
   },
 

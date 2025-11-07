@@ -3,8 +3,10 @@ import { gradeService } from '../../services/grade.service.js';
 import { classService } from '../../services/class.service.js';
 import { teacherService } from '../../services/teacher.service.js';
 import { useToast } from '../../context/ToastContext.jsx';
+import { validateGradeForm } from '../../utils/validation.js';
 import api from '../../config/api.js';
 import Card from '../ui/Card.jsx';
+import FormField from '../ui/FormField.jsx';
 
 const CreateGradeForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -18,6 +20,7 @@ const CreateGradeForm = ({ onSuccess }) => {
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -83,16 +86,46 @@ const CreateGradeForm = ({ onSuccess }) => {
         studentId: '',
       }));
     }
+    
+    // Очищаем ошибку для этого поля при изменении
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    
+    // Валидация формы на клиенте
+    const validation = validateGradeForm(formData);
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      const firstError = Object.values(validation.errors).find(err => err);
+      if (firstError) {
+        showToast(firstError, 'error');
+      }
+      return;
+    }
+    setErrors({});
+
     setLoading(true);
 
     try {
-      await gradeService.createGrade(formData);
+      // Подготавливаем данные для отправки (убираем classId, преобразуем типы)
+      const gradeData = {
+        studentId: formData.studentId,
+        subjectId: formData.subjectId,
+        value: parseInt(formData.value), // Преобразуем в число
+        comment: formData.comment || undefined,
+        date: formData.date || undefined,
+      };
+
+      await gradeService.createGrade(gradeData);
       showToast('Оценка успешно выставлена!', 'success');
       setFormData({
         classId: '',
@@ -106,7 +139,28 @@ const CreateGradeForm = ({ onSuccess }) => {
         onSuccess();
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Ошибка при выставлении оценки';
+      let errorMessage = 'Ошибка при выставлении оценки';
+      
+      if (err.response?.data) {
+        if (err.response.data.errors && Array.isArray(err.response.data.errors)) {
+          // Если есть массив ошибок валидации
+          errorMessage = err.response.data.errors.join(', ');
+          // Устанавливаем ошибки для полей
+          const fieldErrors = {};
+          err.response.data.errors.forEach(errMsg => {
+            if (errMsg.includes('studentId')) fieldErrors.studentId = 'Ученик обязателен';
+            if (errMsg.includes('subjectId')) fieldErrors.subjectId = 'Предмет обязателен';
+            if (errMsg.includes('value')) fieldErrors.value = 'Оценка обязательна';
+            if (errMsg.includes('date')) fieldErrors.date = 'Дата обязательна';
+          });
+          if (Object.keys(fieldErrors).length > 0) {
+            setErrors(fieldErrors);
+          }
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      }
+      
       setError(errorMessage);
       showToast(errorMessage, 'error');
     } finally {
@@ -155,17 +209,13 @@ const CreateGradeForm = ({ onSuccess }) => {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Ученик *
-              </label>
+            <FormField label="Ученик" error={errors.studentId} required>
               <select
                 name="studentId"
                 value={formData.studentId}
                 onChange={handleChange}
-                required
                 disabled={!formData.classId}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 ${errors.studentId ? 'border-destructive' : ''}`}
               >
                 <option value="">Выберите ученика</option>
                 {students.map((student) => (
@@ -174,18 +224,14 @@ const CreateGradeForm = ({ onSuccess }) => {
                   </option>
                 ))}
               </select>
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Предмет *
-              </label>
+            <FormField label="Предмет" error={errors.subjectId} required>
               <select
                 name="subjectId"
                 value={formData.subjectId}
                 onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring ${errors.subjectId ? 'border-destructive' : ''}`}
               >
                 <option value="">Выберите предмет</option>
                 {subjects.map((subject) => (
@@ -194,18 +240,14 @@ const CreateGradeForm = ({ onSuccess }) => {
                   </option>
                 ))}
               </select>
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Оценка *
-              </label>
+            <FormField label="Оценка" error={errors.value} required>
               <select
                 name="value"
                 value={formData.value}
                 onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring ${errors.value ? 'border-destructive' : ''}`}
               >
                 <option value="">Выберите оценку</option>
                 <option value="5">5 (Отлично)</option>
@@ -213,21 +255,17 @@ const CreateGradeForm = ({ onSuccess }) => {
                 <option value="3">3 (Удовлетворительно)</option>
                 <option value="2">2 (Неудовлетворительно)</option>
               </select>
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Дата *
-              </label>
+            <FormField label="Дата" error={errors.date} required>
               <input
                 type="date"
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-ring ${errors.date ? 'border-destructive' : ''}`}
               />
-            </div>
+            </FormField>
           </div>
 
           <div>

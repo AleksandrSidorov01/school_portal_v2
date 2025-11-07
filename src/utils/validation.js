@@ -88,14 +88,28 @@ export const validateTeacherUpdate = (data) => {
 // Валидация оценки (для создания)
 export const validateGrade = (data) => {
   const schema = Joi.object({
-    studentId: Joi.string().uuid().required(),
-    subjectId: Joi.string().uuid().required(),
-    value: Joi.number().integer().min(2).max(5).required(),
-    comment: Joi.string().optional(),
-    date: Joi.date().optional(),
+    studentId: Joi.string().uuid().required().messages({
+      'string.guid': 'ID ученика должен быть валидным UUID',
+      'any.required': 'Ученик обязателен',
+    }),
+    subjectId: Joi.string().uuid().required().messages({
+      'string.guid': 'ID предмета должен быть валидным UUID',
+      'any.required': 'Предмет обязателен',
+    }),
+    value: Joi.number().integer().min(2).max(5).required().messages({
+      'number.base': 'Оценка должна быть числом',
+      'number.integer': 'Оценка должна быть целым числом',
+      'number.min': 'Оценка должна быть не менее 2',
+      'number.max': 'Оценка должна быть не более 5',
+      'any.required': 'Оценка обязательна',
+    }),
+    comment: Joi.string().allow('').optional(),
+    date: Joi.date().optional().messages({
+      'date.base': 'Дата должна быть валидной',
+    }),
   });
 
-  return schema.validate(data);
+  return schema.validate(data, { abortEarly: false });
 };
 
 // Валидация оценки (для обновления)
@@ -129,9 +143,14 @@ export const validate = (validator) => {
     const { error, value } = validator(req.body);
     
     if (error) {
+      const errorMessages = error.details.map(detail => detail.message);
       return res.status(400).json({
         message: 'Ошибка валидации',
-        errors: error.details.map(detail => detail.message),
+        errors: errorMessages,
+        details: error.details.map(detail => ({
+          field: detail.path.join('.'),
+          message: detail.message,
+        })),
       });
     }
 
