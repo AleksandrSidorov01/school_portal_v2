@@ -70,5 +70,11 @@ export const gradeService = {
     const response = await api.delete(`/grades/${id}`);
     return response.data;
   },
+
+  // Получить оценку по ID
+  getGradeById: async (id) => {
+    const response = await api.get(`/grades/${id}`);
+    return response.data.grade;
+  },
 };
 

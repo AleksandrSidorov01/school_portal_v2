@@ -15,13 +15,33 @@ const EditGradeModal = ({ grade, onClose, onSuccess }) => {
 
   useEffect(() => {
     if (grade) {
-      setFormData({
-        value: grade.value?.toString() || '',
-        comment: grade.comment || '',
-        date: grade.date ? new Date(grade.date).toISOString().split('T')[0] : '',
-      });
+      // Если grade не содержит полных данных, загружаем их
+      if (!grade.student || !grade.subject) {
+        loadGradeDetails();
+      } else {
+        setFormData({
+          value: grade.value?.toString() || '',
+          comment: grade.comment || '',
+          date: grade.date ? new Date(grade.date).toISOString().split('T')[0] : '',
+        });
+      }
     }
   }, [grade]);
+
+  const loadGradeDetails = async () => {
+    try {
+      const response = await gradeService.getGradeById(grade.id);
+      if (response) {
+        setFormData({
+          value: response.value?.toString() || '',
+          comment: response.comment || '',
+          date: response.date ? new Date(response.date).toISOString().split('T')[0] : '',
+        });
+      }
+    } catch (err) {
+      console.error('Ошибка загрузки данных оценки:', err);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -70,13 +90,27 @@ const EditGradeModal = ({ grade, onClose, onSuccess }) => {
 
   if (!grade) return null;
 
+  if (loadingData) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <Card className="w-full max-w-2xl m-4">
+          <Card.Content>
+            <div className="flex items-center justify-center py-8">
+              <div className="text-muted-foreground">Загрузка данных...</div>
+            </div>
+          </Card.Content>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <Card className="w-full max-w-2xl m-4 max-h-[90vh] overflow-y-auto">
         <Card.Header>
           <Card.Title>Редактировать оценку</Card.Title>
           <Card.Description>
-            {grade.subject?.name} - {grade.student?.user?.firstName} {grade.student?.user?.lastName}
+            {gradeData?.subject?.name || grade?.subject?.name || 'Предмет'} - {gradeData?.student?.user?.firstName || grade?.student?.user?.firstName || ''} {gradeData?.student?.user?.lastName || grade?.student?.user?.lastName || ''}
           </Card.Description>
         </Card.Header>
         <Card.Content>
