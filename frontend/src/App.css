@@ -1,42 +1,329 @@
+/* Основные контейнеры приложения */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Улучшенные стили для навигации */
+nav {
+  @apply border-b border-border bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/60;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  transition: all 0.3s ease;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Контейнеры для контента */
+.container {
+  @apply mx-auto px-4 sm:px-6 lg:px-8;
+  max-width: 1400px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.page-container {
+  @apply container py-6 space-y-6;
+  animation: fade-in 0.3s ease-out;
 }
 
+/* Карточки с улучшенными стилями */
 .card {
-  padding: 2em;
+  @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm;
+  transition: all 0.2s ease;
 }
 
-.read-the-docs {
-  color: #888;
+.card:hover {
+  @apply shadow-md border-border/80;
+}
+
+.card-header {
+  @apply p-6 pb-4;
+}
+
+.card-title {
+  @apply text-2xl font-semibold tracking-tight;
+}
+
+.card-description {
+  @apply text-sm text-muted-foreground mt-1.5;
+}
+
+.card-content {
+  @apply p-6 pt-0;
+}
+
+.card-footer {
+  @apply p-6 pt-0 flex items-center gap-4;
+}
+
+/* Улучшенные таблицы */
+.table-container {
+  @apply relative w-full overflow-auto rounded-lg border border-border;
+}
+
+table {
+  @apply w-full caption-bottom text-sm;
+}
+
+thead {
+  @apply bg-muted/50;
+}
+
+thead tr {
+  @apply border-b border-border;
+}
+
+th {
+  @apply h-12 px-4 text-left align-middle font-medium text-muted-foreground;
+}
+
+tbody tr {
+  @apply border-b border-border transition-colors hover:bg-muted/50;
+}
+
+tbody tr:last-child {
+  @apply border-0;
+}
+
+td {
+  @apply p-4 align-middle;
+}
+
+/* Кнопки */
+.btn {
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  @apply disabled:pointer-events-none disabled:opacity-50;
+}
+
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+}
+
+.btn-destructive {
+  @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+}
+
+.btn-outline {
+  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+}
+
+.btn-ghost {
+  @apply hover:bg-accent hover:text-accent-foreground;
+}
+
+/* Формы */
+.form-group {
+  @apply space-y-2;
+}
+
+.form-label {
+  @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
+}
+
+.form-input {
+  @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm;
+  @apply ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium;
+  @apply placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2;
+  @apply focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  @apply border-primary;
+}
+
+.form-error {
+  @apply text-sm text-destructive;
+}
+
+/* Модальные окна */
+.modal-overlay {
+  @apply fixed inset-0 z-50 bg-background/80 backdrop-blur-sm;
+  animation: fade-in 0.2s ease-out;
+}
+
+.modal-content {
+  @apply fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%];
+  @apply gap-4 border border-border bg-card p-6 shadow-lg rounded-lg;
+  animation: scale-in 0.2s ease-out;
+}
+
+.modal-header {
+  @apply flex flex-col space-y-1.5 text-center sm:text-left;
+}
+
+.modal-title {
+  @apply text-lg font-semibold leading-none tracking-tight;
+}
+
+.modal-description {
+  @apply text-sm text-muted-foreground;
+}
+
+/* Badges */
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors;
+  @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+}
+
+.badge-default {
+  @apply bg-primary text-primary-foreground hover:bg-primary/80;
+}
+
+.badge-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+}
+
+.badge-destructive {
+  @apply bg-destructive text-destructive-foreground hover:bg-destructive/80;
+}
+
+.badge-outline {
+  @apply text-foreground border border-input;
+}
+
+.badge-success {
+  @apply bg-success text-success-foreground;
+}
+
+.badge-warning {
+  @apply bg-warning text-warning-foreground;
+}
+
+.badge-info {
+  @apply bg-info text-info-foreground;
+}
+
+/* Статистические карточки */
+.stat-card {
+  @apply card p-6 space-y-2 card-hover;
+}
+
+.stat-card-icon {
+  @apply w-12 h-12 rounded-lg flex items-center justify-center;
+  @apply bg-primary/10 text-primary;
+}
+
+.stat-card-value {
+  @apply text-3xl font-bold tracking-tight;
+}
+
+.stat-card-label {
+  @apply text-sm text-muted-foreground;
+}
+
+/* Sidebar / Navigation */
+.sidebar {
+  @apply border-r border-border bg-card/50;
+}
+
+.sidebar-item {
+  @apply flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md;
+  @apply text-muted-foreground hover:text-foreground hover:bg-accent transition-colors;
+}
+
+.sidebar-item.active {
+  @apply bg-accent text-foreground;
+}
+
+/* Уведомления и алерты */
+.alert {
+  @apply relative w-full rounded-lg border border-border p-4;
+}
+
+.alert-success {
+  @apply border-success/50 bg-success/10 text-success;
+}
+
+.alert-warning {
+  @apply border-warning/50 bg-warning/10 text-warning;
+}
+
+.alert-error {
+  @apply border-destructive/50 bg-destructive/10 text-destructive;
+}
+
+.alert-info {
+  @apply border-info/50 bg-info/10 text-info;
+}
+
+/* Скелетоны загрузки */
+.skeleton {
+  @apply animate-pulse rounded-md bg-muted;
+}
+
+/* Divider */
+.divider {
+  @apply border-t border-border;
+}
+
+/* Dropdown меню */
+.dropdown-menu {
+  @apply z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover p-1 shadow-md;
+  animation: scale-in 0.1s ease-out;
+}
+
+.dropdown-item {
+  @apply relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm;
+  @apply outline-none transition-colors hover:bg-accent hover:text-accent-foreground;
+  @apply focus:bg-accent focus:text-accent-foreground;
+}
+
+/* Tabs */
+.tabs-list {
+  @apply inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground;
+}
+
+.tab-trigger {
+  @apply inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5;
+  @apply text-sm font-medium ring-offset-background transition-all;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  @apply disabled:pointer-events-none disabled:opacity-50;
+  @apply hover:bg-background/80;
+}
+
+.tab-trigger.active {
+  @apply bg-background text-foreground shadow-sm;
+}
+
+/* Progress bar */
+.progress {
+  @apply relative h-2 w-full overflow-hidden rounded-full bg-secondary;
+}
+
+.progress-indicator {
+  @apply h-full w-full flex-1 bg-primary transition-all;
+}
+
+/* Утилиты для текста */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+}
+
+/* Hover эффекты */
+.hover-lift {
+  @apply transition-transform duration-200 hover:-translate-y-1;
+}
+
+.hover-glow {
+  @apply transition-shadow duration-200 hover:shadow-lg hover:shadow-primary/20;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .card-content,
+  .card-header,
+  .card-footer {
+    @apply p-4;
+  }
+  
+  .page-container {
+    @apply py-4;
+  }
 }
