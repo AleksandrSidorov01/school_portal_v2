@@ -14,20 +14,23 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String
-  role      String   @default("STUDENT") // ADMIN, TEACHER, STUDENT
+  role      String   @default("STUDENT") // ADMIN, TEACHER, STUDENT, PARENT
   firstName String
   lastName  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Связи
-      student   Student?
-      teacher   Teacher?
-      notifications Notification[]
-      activityLogs ActivityLog[]
+  student   Student?
+  teacher   Teacher?
+  parent    Parent?
+  notifications Notification[]
+  activityLogs ActivityLog[]
+  sentMessages Message[] @relation("MessageSender")
+  receivedMessages Message[] @relation("MessageReceiver")
 
-      @@map("users")
-    }
+  @@map("users")
+}
 
 // Класс
 model Class {
@@ -43,6 +46,7 @@ model Class {
   students   Student[]
   schedules  Schedule[]
   classTeacher Teacher? @relation("ClassTeacher", fields: [classTeacherId], references: [id])
+  homeworks  Homework[]
 
   @@unique([name, grade])
   @@map("classes")
@@ -65,6 +69,10 @@ model Student {
   class     Class    @relation(fields: [classId], references: [id])
   grades    Grade[]
   schedules Schedule[] @relation("StudentSchedule")
+  parents   Parent[]
+  attendances Attendance[]
+  homeworks Homework[]
+  homeworkCompletions HomeworkCompletion[]
 
   @@map("students")
 }
@@ -85,6 +93,7 @@ model Teacher {
   schedules   Schedule[]
   grades      Grade[]
   classTeacher Class?  @relation("ClassTeacher")
+  homeworks   Homework[]
 
   @@map("teachers")
 }
@@ -102,6 +111,7 @@ model Subject {
   teacher     Teacher  @relation(fields: [teacherId], references: [id])
   grades      Grade[]
   schedules   Schedule[]
+  homeworks   Homework[]
 
   @@map("subjects")
 }
@@ -173,8 +183,105 @@ model Schedule {
   subject     Subject  @relation(fields: [subjectId], references: [id])
   teacher     Teacher  @relation(fields: [teacherId], references: [id])
   students    Student[] @relation("StudentSchedule")
+  attendances Attendance[]
 
   @@unique([classId, dayOfWeek, lessonNumber])
   @@map("schedules")
+}
+
+// Родитель
+model Parent {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  phone     String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связи
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students  Student[]
+
+  @@map("parents")
+}
+
+// Домашнее задание
+model Homework {
+  id          String   @id @default(uuid())
+  subjectId   String
+  teacherId   String
+  studentId   String?
+  classId     String?  // Если задание для всего класса
+  title       String
+  description String
+  dueDate     DateTime // Дедлайн
+  completed   Boolean  @default(false) // Для индивидуальных заданий
+  completedAt DateTime?
+  attachments String?  // JSON строка с прикрепленными файлами (URLs или пути)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связи
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  student     Student? @relation(fields: [studentId], references: [id])
+  class       Class?   @relation(fields: [classId], references: [id])
+  completions HomeworkCompletion[] // Записи о выполнении задания студентами
+
+  @@map("homeworks")
+}
+
+// Выполнение домашнего задания студентом
+model HomeworkCompletion {
+  id          String   @id @default(uuid())
+  homeworkId  String
+  studentId   String
+  completedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  // Связи
+  homework    Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([homeworkId, studentId])
+  @@map("homework_completions")
+}
+
+// Посещаемость
+model Attendance {
+  id          String   @id @default(uuid())
+  studentId   String
+  scheduleId  String
+  date        DateTime @default(now())
+  status      String   // present, absent, late, excused
+  comment     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связи
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  schedule    Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, scheduleId, date])
+  @@map("attendances")
+}
+
+// Сообщение
+model Message {
+  id        String   @id @default(uuid())
+  senderId  String
+  receiverId String
+  subject   String?
+  content   String
+  read      Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связи
+  sender    User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver  User     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
 }
 

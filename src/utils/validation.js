@@ -137,6 +137,102 @@ export const validateSchedule = (data) => {
   return schema.validate(data);
 };
 
+// Валидация родителя (для создания)
+export const validateParent = (data) => {
+  const schema = Joi.object({
+    userId: Joi.string().uuid().required(),
+    phone: Joi.string().optional(),
+    address: Joi.string().optional(),
+    studentIds: Joi.array().items(Joi.string().uuid()).optional(),
+  });
+
+  return schema.validate(data);
+};
+
+// Валидация родителя (для обновления)
+export const validateParentUpdate = (data) => {
+  const schema = Joi.object({
+    phone: Joi.string().optional(),
+    address: Joi.string().optional(),
+    studentIds: Joi.array().items(Joi.string().uuid()).optional(),
+  });
+
+  return schema.validate(data);
+};
+
+// Валидация домашнего задания (для создания)
+export const validateHomework = (data) => {
+  const schema = Joi.object({
+    subjectId: Joi.string().uuid().required(),
+    teacherId: Joi.string().uuid().required(),
+    studentId: Joi.string().uuid().optional().allow(null, ''),
+    classId: Joi.string().uuid().optional().allow(null, ''),
+    title: Joi.string().required(),
+    description: Joi.string().required(),
+    dueDate: Joi.date().required(),
+    attachments: Joi.array().items(Joi.string()).optional(),
+  });
+
+  return schema.validate(data);
+};
+
+// Валидация домашнего задания (для обновления)
+export const validateHomeworkUpdate = (data) => {
+  const schema = Joi.object({
+    title: Joi.string().optional(),
+    description: Joi.string().optional(),
+    dueDate: Joi.date().optional(),
+    completed: Joi.boolean().optional(),
+  });
+
+  return schema.validate(data);
+};
+
+// Валидация посещаемости (для создания)
+export const validateAttendance = (data) => {
+  const schema = Joi.object({
+    studentId: Joi.string().uuid().required(),
+    scheduleId: Joi.string().uuid().required(),
+    date: Joi.date().optional(),
+    status: Joi.string().valid('present', 'absent', 'late', 'excused').required(),
+    comment: Joi.string().optional().allow(''),
+  });
+
+  return schema.validate(data);
+};
+
+// Валидация посещаемости (для обновления)
+export const validateAttendanceUpdate = (data) => {
+  const schema = Joi.object({
+    status: Joi.string().valid('present', 'absent', 'late', 'excused').optional(),
+    comment: Joi.string().optional().allow(''),
+    date: Joi.date().optional(),
+  });
+
+  return schema.validate(data);
+};
+
+// Валидация сообщения (для создания)
+export const validateMessage = (data) => {
+  const schema = Joi.object({
+    receiverId: Joi.string().uuid().required(),
+    subject: Joi.string().optional().allow(''),
+    content: Joi.string().required(),
+  });
+
+  return schema.validate(data);
+};
+
+// Валидация сообщения (для обновления)
+export const validateMessageUpdate = (data) => {
+  const schema = Joi.object({
+    subject: Joi.string().optional().allow(''),
+    content: Joi.string().optional(),
+  });
+
+  return schema.validate(data);
+};
+
 // Middleware для валидации
 export const validate = (validator) => {
   return (req, res, next) => {

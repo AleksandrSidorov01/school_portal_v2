@@ -1,17 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useNavigate } from 'react-router-dom';
 import { teacherService } from '../../services/teacher.service.js';
 import CreateGradeForm from '../grades/CreateGradeForm.jsx';
 import ClassesList from '../classes/ClassesList.jsx';
 import TeacherScheduleView from '../schedule/TeacherScheduleView.jsx';
+import HomeworksList from '../homeworks/HomeworksList.jsx';
+import CreateHomeworkModal from '../homeworks/CreateHomeworkModal.jsx';
+import AttendancesList from '../attendances/AttendancesList.jsx';
+import CreateAttendanceModal from '../attendances/CreateAttendanceModal.jsx';
 import NotificationBell from '../notifications/NotificationBell.jsx';
 import Card from '../ui/Card.jsx';
+import Button from '../ui/Button.jsx';
 
 const TeacherDashboard = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('grades');
   const [teacherInfo, setTeacherInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCreateHomeworkModal, setShowCreateHomeworkModal] = useState(false);
+  const [showCreateAttendanceModal, setShowCreateAttendanceModal] = useState(false);
+  const [selectedClassId, setSelectedClassId] = useState(null);
+  const [homeworksKey, setHomeworksKey] = useState(0);
+  const [attendancesKey, setAttendancesKey] = useState(0);
 
   useEffect(() => {
     loadTeacherInfo();
@@ -30,14 +42,27 @@ const TeacherDashboard = () => {
 
   const tabs = [
     { id: 'grades', name: 'Выставление оценок', icon: '📝' },
+    { id: 'homeworks', name: 'Домашние задания', icon: '📚' },
+    { id: 'attendance', name: 'Посещаемость', icon: '✅' },
     { id: 'classes', name: 'Мои классы', icon: '👥' },
     { id: 'schedule', name: 'Расписание', icon: '📅' },
+    { id: 'messages', name: 'Сообщения', icon: '💬' },
     { id: 'profile', name: 'Профиль', icon: '👤' },
   ];
 
   const handleGradeSuccess = () => {
     // Можно добавить обновление списка оценок или уведомление
     console.log('Оценка успешно выставлена');
+  };
+
+  const handleHomeworkSuccess = () => {
+    setShowCreateHomeworkModal(false);
+    setHomeworksKey(prev => prev + 1); // Обновить список домашних заданий
+  };
+
+  const handleAttendanceSuccess = () => {
+    setShowCreateAttendanceModal(false);
+    setAttendancesKey(prev => prev + 1); // Обновить список посещаемости
   };
 
   return (
@@ -107,8 +132,87 @@ const TeacherDashboard = () => {
               {activeTab === 'grades' && (
                 <CreateGradeForm onSuccess={handleGradeSuccess} />
               )}
+              {activeTab === 'homeworks' && (
+                <div className="space-y-6">
+                  <Card>
+                    <Card.Header>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Card.Title>Домашние задания</Card.Title>
+                          <Card.Description>
+                            Управление домашними заданиями для ваших классов
+                          </Card.Description>
+                        </div>
+                        <Button onClick={() => setShowCreateHomeworkModal(true)}>
+                          Создать задание
+                        </Button>
+                      </div>
+                    </Card.Header>
+                    <Card.Content>
+                      <HomeworksList 
+                        key={homeworksKey}
+                        teacherId={teacherInfo?.teacher?.id} 
+                        showActions={false}
+                      />
+                    </Card.Content>
+                  </Card>
+                  <CreateHomeworkModal
+                    isOpen={showCreateHomeworkModal}
+                    onClose={() => setShowCreateHomeworkModal(false)}
+                    onSuccess={handleHomeworkSuccess}
+                    teacherId={teacherInfo?.teacher?.id}
+                  />
+                </div>
+              )}
+              {activeTab === 'attendance' && (
+                <div className="space-y-6">
+                  <Card>
+                    <Card.Header>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Card.Title>Посещаемость</Card.Title>
+                          <Card.Description>
+                            Учет посещаемости учеников
+                          </Card.Description>
+                        </div>
+                        <Button onClick={() => setShowCreateAttendanceModal(true)}>
+                          Отметить посещаемость
+                        </Button>
+                      </div>
+                    </Card.Header>
+                    <Card.Content>
+                      <AttendancesList 
+                        key={attendancesKey}
+                        teacherId={teacherInfo?.teacher?.id} 
+                      />
+                    </Card.Content>
+                  </Card>
+                  <CreateAttendanceModal
+                    isOpen={showCreateAttendanceModal}
+                    onClose={() => setShowCreateAttendanceModal(false)}
+                    onSuccess={handleAttendanceSuccess}
+                  />
+                </div>
+              )}
               {activeTab === 'classes' && <ClassesList />}
               {activeTab === 'schedule' && <TeacherScheduleView />}
+              {activeTab === 'messages' && (
+                <div className="space-y-6">
+                  <Card>
+                    <Card.Header>
+                      <Card.Title>Сообщения</Card.Title>
+                      <Card.Description>
+                        Общение с учениками и другими учителями
+                      </Card.Description>
+                    </Card.Header>
+                    <Card.Content>
+                      <Button onClick={() => navigate('/messages')}>
+                        Открыть сообщения
+                      </Button>
+                    </Card.Content>
+                  </Card>
+                </div>
+              )}
               {activeTab === 'profile' && (
                 <div className="space-y-6">
                   <Card>

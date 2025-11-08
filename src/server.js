@@ -10,6 +10,10 @@ import scheduleRoutes from './routes/schedule.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import backupRoutes from './routes/backup.routes.js';
+import parentRoutes from './routes/parent.routes.js';
+import homeworkRoutes from './routes/homework.routes.js';
+import attendanceRoutes from './routes/attendance.routes.js';
+import messageRoutes from './routes/message.routes.js';
 
 const app = express();
 
@@ -28,6 +32,10 @@ app.use('/api/schedule', scheduleRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/backup', backupRoutes);
+app.use('/api/parents', parentRoutes);
+app.use('/api/homeworks', homeworkRoutes);
+app.use('/api/attendances', attendanceRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

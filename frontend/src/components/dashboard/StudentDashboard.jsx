@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useNavigate } from 'react-router-dom';
 import { studentService } from '../../services/student.service.js';
 import GradesTable from '../grades/GradesTable.jsx';
 import ScheduleView from '../schedule/ScheduleView.jsx';
 import NotificationBell from '../notifications/NotificationBell.jsx';
+import HomeworksList from '../homeworks/HomeworksList.jsx';
+import AttendancesList from '../attendances/AttendancesList.jsx';
 import Card from '../ui/Card.jsx';
+import Button from '../ui/Button.jsx';
 
 const StudentDashboard = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('grades');
   const [studentInfo, setStudentInfo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +34,10 @@ const StudentDashboard = () => {
 
   const tabs = [
     { id: 'grades', name: 'Оценки', icon: '📊' },
+    { id: 'homeworks', name: 'Домашние задания', icon: '📝' },
+    { id: 'attendance', name: 'Посещаемость', icon: '✅' },
     { id: 'schedule', name: 'Расписание', icon: '📅' },
+    { id: 'messages', name: 'Сообщения', icon: '💬' },
     { id: 'profile', name: 'Профиль', icon: '👤' },
   ];
 
@@ -98,7 +106,66 @@ const StudentDashboard = () => {
           ) : (
             <>
               {activeTab === 'grades' && <GradesTable />}
+              {activeTab === 'homeworks' && (
+                <div className="space-y-6">
+                  <Card>
+                    <Card.Header>
+                      <Card.Title>Мои домашние задания</Card.Title>
+                      <Card.Description>
+                        Список всех домашних заданий
+                      </Card.Description>
+                    </Card.Header>
+                    <Card.Content>
+                      {studentInfo?.student?.id ? (
+                        <HomeworksList studentId={studentInfo.student.id} showActions={true} />
+                      ) : (
+                        <p className="text-muted-foreground">
+                          Информация о студенте не найдена. Обратитесь к администратору.
+                        </p>
+                      )}
+                    </Card.Content>
+                  </Card>
+                </div>
+              )}
+              {activeTab === 'attendance' && (
+                <div className="space-y-6">
+                  <Card>
+                    <Card.Header>
+                      <Card.Title>Моя посещаемость</Card.Title>
+                      <Card.Description>
+                        История посещаемости уроков
+                      </Card.Description>
+                    </Card.Header>
+                    <Card.Content>
+                      {studentInfo?.student?.id ? (
+                        <AttendancesList studentId={studentInfo.student.id} />
+                      ) : (
+                        <p className="text-muted-foreground">
+                          Информация о студенте не найдена. Обратитесь к администратору.
+                        </p>
+                      )}
+                    </Card.Content>
+                  </Card>
+                </div>
+              )}
               {activeTab === 'schedule' && <ScheduleView />}
+              {activeTab === 'messages' && (
+                <div className="space-y-6">
+                  <Card>
+                    <Card.Header>
+                      <Card.Title>Сообщения</Card.Title>
+                      <Card.Description>
+                        Общение с учителями и другими пользователями
+                      </Card.Description>
+                    </Card.Header>
+                    <Card.Content>
+                      <Button onClick={() => navigate('/messages')}>
+                        Открыть сообщения
+                      </Button>
+                    </Card.Content>
+                  </Card>
+                </div>
+              )}
               {activeTab === 'profile' && (
                 <div className="space-y-6">
                   <Card>

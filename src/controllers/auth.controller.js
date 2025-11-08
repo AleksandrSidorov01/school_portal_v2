@@ -104,7 +104,13 @@ export const getMe = async (req, res, next) => {
         role: true,
         createdAt: true,
         student: {
-          include: {
+          select: {
+            id: true,
+            classId: true,
+            studentNumber: true,
+            birthDate: true,
+            address: true,
+            phone: true,
             class: {
               select: {
                 id: true,
@@ -116,11 +122,40 @@ export const getMe = async (req, res, next) => {
           },
         },
         teacher: {
-          include: {
+          select: {
+            id: true,
+            employeeNumber: true,
+            specialization: true,
+            phone: true,
             subjects: {
               select: {
                 id: true,
                 name: true,
+              },
+            },
+          },
+        },
+        parent: {
+          select: {
+            id: true,
+            phone: true,
+            address: true,
+            students: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                  },
+                },
+                class: {
+                  select: {
+                    id: true,
+                    name: true,
+                    grade: true,
+                  },
+                },
               },
             },
           },
